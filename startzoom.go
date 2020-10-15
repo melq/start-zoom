@@ -8,6 +8,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 )
 
 var sc = bufio.NewScanner(os.Stdin)
@@ -67,6 +68,7 @@ func RegisterClass() (cd classData) {
 }
 
 func ExStartZoom(classes []classData) {
+	fmt.Println(time.Now())
 	fmt.Println("class start.")
 }
 
