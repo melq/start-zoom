@@ -39,8 +39,12 @@ type classData struct {
 }
 
 /*jsonファイルに書き込む関数*/
-func SaveClass (classJson []byte, filename string) {
-	fp, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0666)
+func SaveClass (classes []classData, filename string) {
+	classJson, err := json.Marshal(classes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fp, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -50,7 +54,7 @@ func SaveClass (classJson []byte, filename string) {
 		panic(err)
 	}
 }
-
+/*新規登録する授業の構造体を作成する関数*/
 func RegisterClass() (cd classData) {
 	fmt.Println("新しく授業を登録します。")
 	fmt.Print("授業名を入力:")
@@ -68,7 +72,9 @@ func RegisterClass() (cd classData) {
 }
 
 func ExStartZoom(classes []classData) {
-	fmt.Println(time.Now())
+	now := time.Now()
+	fmt.Println(now.Weekday())
+
 	fmt.Println("class start.")
 }
 
@@ -96,21 +102,20 @@ func StartZoom() {
 		case 1:
 			fmt.Println("授業を登録します.")
 			classes = append(classes, RegisterClass())
-			classJson, err := json.Marshal(classes)
-			if err != nil {
-				log.Fatal(err)
-			}
-			SaveClass(classJson, filename)
+			SaveClass(classes, filename)
 		case 2:
 			fmt.Println("Zoomを開きます.")
 			ExStartZoom(classes)
 		case 3:
-			fmt.Println("\n登録されている授業を表示します.\n")
+			fmt.Println("\n登録されている授業を表示します.")
+			fmt.Print("\n")
 			if len(classes) == 0 {
 				fmt.Println("no class.")
 			} else {
 				for i, v := range classes {
-					fmt.Println(i+1, ": ", v.Name)
+					fmt.Println(i+1, ":", v.Name)
+					fmt.Println("", v.Day, v.Start, "~", v.End)
+					fmt.Println("", v.Url)
 				}
 			}
 		}
