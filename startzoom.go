@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"io/ioutil"
 	"log"
 	"os"
@@ -12,13 +14,16 @@ import (
 	"time"
 )
 
+type Config struct {
+	ClassData ClassData
+}
 /*授業の情報を格納する構造体*/
-type classData struct {
-	Name    string `json:"Name"`
-	Weekday string `json:"Weekday"`
-	Start   string `json:"Start"`
-	End     string `json:"End"`
-	Url     string `json:"Url"`
+type ClassData struct {
+	Name    string `toml:"Name"`
+	Weekday string `toml:"Weekday"`
+	Start   string `toml:"Start"`
+	End     string `toml:"End"`
+	Url     string `toml:"Url"`
 }
 
 var sc = bufio.NewScanner(os.Stdin)
@@ -39,8 +44,20 @@ func InputNum (msg string) int {
 		return i
 	}
 }
+func loadClassesToml(filename string) (classes []ClassData) {
+	tomlBytes, err := ioutil.ReadFile(filename) //json読み込み
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(tomlBytes) != 0 {
+		if err := toml.Unmarshal(tomlBytes, &classes); err != nil {
+			log.Fatal(err)
+		}
+	}
+	return
+}
 /*jsonファイルを読み込んで構造体の配列を返す関数*/
-func loadClasses(filename string) (classes []classData) {
+func loadClasses(filename string) (classes []ClassData) {
 	bytes, err := ioutil.ReadFile(filename)	//json読み込み
 	if err != nil {
 		log.Fatal(err)
@@ -52,8 +69,22 @@ func loadClasses(filename string) (classes []classData) {
 	}
 	return
 }
+func saveClassesToml(classes []ClassData, filename string) {
+	var buf bytes.Buffer
+	if err := toml.NewEncoder(&buf).Encode(classes); err != nil {
+		log.Fatal(err)
+	}
+	fp, err := os.OpenFile(filename, os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer fp.Close()
+	if _, err = fp.WriteString(buf.String()); err != nil {
+		log.Fatal(err)
+	}
+}
 /*jsonファイルに書き込む関数*/
-func saveClasses(classes []classData, filename string) {
+func saveClasses(classes []ClassData, filename string) {
 	classJson, err := json.Marshal(classes)
 	if err != nil {
 		log.Fatal(err)
@@ -69,7 +100,7 @@ func saveClasses(classes []classData, filename string) {
 	}
 }
 /*新規登録する授業の構造体を作成する関数*/
-func registerClass() (cd classData) {
+func registerClass() (cd ClassData) {
 	fmt.Println("新しく授業を登録します。")
 	fmt.Print("授業名を入力:")
 	cd.Name = read()
@@ -96,7 +127,7 @@ func registerClass() (cd classData) {
 	return
 }
 /*ブラウザでZoomを開く関数*/
-func startZoom(classes []classData) {
+func startZoom(classes []ClassData) {
 	fmt.Println("Zoomを開きます.")
 	trueNow := time.Now()
 	for _, class := range classes {
@@ -116,7 +147,7 @@ func startZoom(classes []classData) {
 	}
 }
 /*登録授業のリストを表示する関数*/
-func showClassList(classes []classData) {
+func showClassList(classes []ClassData) {
 	fmt.Println("\n登録されている授業を表示します.")
 	fmt.Print("\n")
 	if len(classes) == 0 {
@@ -131,8 +162,8 @@ func showClassList(classes []classData) {
 }
 /*メイン関数*/
 func StartZoomMain() {
-	filename := "classes.json"
-	classes := loadClasses(filename)
+	filename := "classes.toml"
+	classes := loadClassesToml(filename)
 
 	fmt.Println("\n" +
 		"---------------------------------------------\n" +
@@ -150,7 +181,7 @@ func StartZoomMain() {
 			startZoom(classes)
 		case 2:
 			classes = append(classes, registerClass())
-			saveClasses(classes, filename)
+			saveClassesToml(classes, filename)
 		case 3:
 			showClassList(classes)
 		}
