@@ -39,8 +39,18 @@ func InputNum (msg string) int {
 		return i
 	}
 }
+/*ファイルの存在を確認する関数*/
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
 /*jsonファイルを読み込んで構造体の配列を返す関数*/
 func loadClasses(filename string) (classes []classData) {
+	if !fileExists(filename) {
+		if _, err := os.Create(filename); err != nil {
+			log.Fatal(err)
+		}
+	}
 	bytes, err := ioutil.ReadFile(filename)	//json読み込み
 	if err != nil {
 		log.Fatal(err)
