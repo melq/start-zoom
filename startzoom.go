@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 )
@@ -105,6 +106,10 @@ func startZoom(classes []classData) {
 			endTime, _ := time.Parse("15:04", class.End)
 			if startTime.Before(now) && endTime.After(now) {
 				fmt.Println(class.Name, "のZoomを開きます")
+				err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", class.Url).Start()
+				if err != nil {
+					panic(err)
+				}
 				return
 			}
 		}
@@ -124,7 +129,7 @@ func showClassList(classes []classData) {
 		}
 	}
 }
-
+/*メイン関数*/
 func StartZoomMain() {
 	filename := "classes.json"
 	classes := loadClasses(filename)
@@ -137,15 +142,15 @@ func StartZoomMain() {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n0: 終了, 1: 授業登録, 2: 授業開始, 3: 授業リスト") {
+		switch InputNum("\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト") {
 		case 0:
 			fmt.Println("終了します.")
 			flg = 1
 		case 1:
+			startZoom(classes)
+		case 2:
 			classes = append(classes, registerClass())
 			saveClasses(classes, filename)
-		case 2:
-			startZoom(classes)
 		case 3:
 			showClassList(classes)
 		}
