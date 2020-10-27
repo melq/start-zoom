@@ -73,7 +73,7 @@ func saveClasses(classes []classData, filename string) {
 		panic(err)
 	}
 	defer fp.Close()
-	_, err = fp.WriteString(string(classJson))
+	_, err = fp.Write(classJson)
 	if err != nil {
 		panic(err)
 	}
@@ -107,12 +107,13 @@ func registerClass() (cd classData) {
 }
 /*ブラウザでZoomを開く関数*/
 func startZoom(classes []classData) {
-	fmt.Println("Zoomを開きます.")
 	trueNow := time.Now()
+	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
 	for _, class := range classes {
 		if class.Weekday == trueNow.Weekday().String() {
 			now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 			startTime, _ := time.Parse("15:04", class.Start)
+			startTime = startTime.Add(-10 * time.Minute)
 			endTime, _ := time.Parse("15:04", class.End)
 			if startTime.Before(now) && endTime.After(now) {
 				fmt.Println(class.Name, "のZoomを開きます")
