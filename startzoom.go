@@ -7,40 +7,58 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 )
 
+/*授業の情報を格納する構造体*/
+type classData struct {
+	Name    string `json:"Name"`
+	Weekday string `json:"Weekday"`
+	Start   string `json:"Start"`
+	End     string `json:"End"`
+	Url     string `json:"Url"`
+}
+
 var sc = bufio.NewScanner(os.Stdin)
 
+/*入力読み込み用関数*/
 func read() string {
 	sc.Scan()
 	return sc.Text()
 }
-
-func InputNum (sc *bufio.Scanner, msg string) int {
+/*数値入力用関数*/
+func InputNum (msg string) int {
 	for {
 		fmt.Println(msg)
-		sc.Scan()
-		i, e := strconv.Atoi(sc.Text())
+		i, e := strconv.Atoi(read())
 		if e != nil {
 			continue
 		}
 		return i
 	}
 }
-
-type classData struct {
-	Name string `json:name`
-	Day string `json:day`
-	Start string `json:start`
-	End string `json:end`
-	Url string `json:url`
+/*jsonファイルを読み込んで構造体の配列を返す関数*/
+func loadClasses(filename string) (classes []classData) {
+	bytes, err := ioutil.ReadFile(filename)	//json読み込み
+	if err != nil {
+		log.Fatal(err)
+	}
+	if len(bytes) != 0 {
+		if err := json.Unmarshal(bytes, &classes); err != nil {
+			log.Fatal(err)
+		}
+	}
+	return
 }
-
 /*jsonファイルに書き込む関数*/
-func SaveClass (classJson []byte, filename string) {
-	fp, err := os.OpenFile(filename, os.O_WRONLY|os.O_APPEND, 0666)
+func saveClasses(classes []classData, filename string) {
+	classJson, err := json.Marshal(classes)
+	if err != nil {
+		log.Fatal(err)
+	}
+	fp, err := os.OpenFile(filename, os.O_WRONLY, 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -50,69 +68,91 @@ func SaveClass (classJson []byte, filename string) {
 		panic(err)
 	}
 }
-
-func RegisterClass() (cd classData) {
+/*新規登録する授業の構造体を作成する関数*/
+func registerClass() (cd classData) {
 	fmt.Println("新しく授業を登録します。")
 	fmt.Print("授業名を入力:")
 	cd.Name = read()
-	fmt.Print("曜日を入力:")
-	cd.Day = read()
-	fmt.Print("開始時間を入力(例：14:30)")
-	cd.Start = read()
-	fmt.Print("終了時間を入力:")
-	cd.End = read()
+	fmt.Println()
+	tmp := InputNum("曜日を選択(開始時の曜日): 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday")
+	switch tmp {
+	case 1: cd.Weekday = "Sunday"
+	case 2: cd.Weekday = "Monday"
+	case 3: cd.Weekday = "Tuesday"
+	case 4: cd.Weekday = "Wednesday"
+	case 5: cd.Weekday = "Thursday"
+	case 6: cd.Weekday = "Friday"
+	case 7: cd.Weekday = "Saturday"
+	}
+	tmp = InputNum("開始時間を入力(例：14:30 => 1430 (半角数字))")
+	cd.Start = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { cd.Start += "0" }
+	tmp = InputNum("終了時間を入力:")
+	cd.End = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { cd.End += "0" }
 	fmt.Print("ZoomURLを入力:")
 	cd.Url = read()
 
 	return
 }
-
-func ExStartZoom(classes []classData) {
-	fmt.Println(time.Now())
-	fmt.Println("class start.")
-}
-
-func StartZoom() {
-	filename := "classes.json"
-	bytes, err := ioutil.ReadFile(filename)	//json読み込み
-	if err != nil {
-		log.Fatal(err)
-	}
-	var classes []classData
-	if len(bytes) != 0 {
-		if err := json.Unmarshal(bytes, &classes); err != nil {
-			log.Fatal(err)
+/*ブラウザでZoomを開く関数*/
+func startZoom(classes []classData) {
+	fmt.Println("Zoomを開きます.")
+	trueNow := time.Now()
+	for _, class := range classes {
+		if class.Weekday == trueNow.Weekday().String() {
+			now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
+			startTime, _ := time.Parse("15:04", class.Start)
+			endTime, _ := time.Parse("15:04", class.End)
+			if startTime.Before(now) && endTime.After(now) {
+				fmt.Println(class.Name, "のZoomを開きます")
+				err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", class.Url).Start()
+				if err != nil {
+					panic(err)
+				}
+				return
+			}
 		}
 	}
+}
+/*登録授業のリストを表示する関数*/
+func showClassList(classes []classData) {
+	fmt.Println("\n登録されている授業を表示します.")
+	fmt.Print("\n")
+	if len(classes) == 0 {
+		fmt.Println("登録授業なし")
+	} else {
+		for i, class := range classes {
+			fmt.Println(i+1, ":", class.Name)
+			fmt.Println("", class.Weekday, class.Start, "~", class.End)
+			fmt.Println("", class.Url)
+		}
+	}
+}
+/*メイン関数*/
+func StartZoomMain() {
+	filename := "classes.json"
+	classes := loadClasses(filename)
 
-	fmt.Println("\n--- StartZoom (made by Riku Tsuzuki) --- ")
+	fmt.Println("\n" +
+		"---------------------------------------------\n" +
+		"----------------- StartZoom -----------------\n" +
+		"----------- (made by RikuTsuzuki) -----------\n" +
+		"---------------------------------------------")
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum(sc, "\n0: 終了, 1: 授業登録, 2: 授業開始, 3: 授業リスト") {
+		switch InputNum("\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト") {
 		case 0:
 			fmt.Println("終了します.")
 			flg = 1
 		case 1:
-			fmt.Println("授業を登録します.")
-			classes = append(classes, RegisterClass())
-			classJson, err := json.Marshal(classes)
-			if err != nil {
-				log.Fatal(err)
-			}
-			SaveClass(classJson, filename)
+			startZoom(classes)
 		case 2:
-			fmt.Println("Zoomを開きます.")
-			ExStartZoom(classes)
+			classes = append(classes, registerClass())
+			saveClasses(classes, filename)
 		case 3:
-			fmt.Println("\n登録されている授業を表示します.\n")
-			if len(classes) == 0 {
-				fmt.Println("no class.")
-			} else {
-				for i, v := range classes {
-					fmt.Println(i+1, ": ", v.Name)
-				}
-			}
+			showClassList(classes)
 		}
 	}
 }
