@@ -39,8 +39,18 @@ func InputNum (msg string) int {
 		return i
 	}
 }
+/*ファイルの存在を確認する関数*/
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
 /*jsonファイルを読み込んで構造体の配列を返す関数*/
 func loadClasses(filename string) (classes []classData) {
+	if !fileExists(filename) {
+		if _, err := os.Create(filename); err != nil {
+			log.Fatal(err)
+		}
+	}
 	bytes, err := ioutil.ReadFile(filename)	//json読み込み
 	if err != nil {
 		log.Fatal(err)
@@ -63,7 +73,7 @@ func saveClasses(classes []classData, filename string) {
 		panic(err)
 	}
 	defer fp.Close()
-	_, err = fp.WriteString(string(classJson))
+	_, err = fp.Write(classJson)
 	if err != nil {
 		panic(err)
 	}
@@ -97,12 +107,13 @@ func registerClass() (cd classData) {
 }
 /*ブラウザでZoomを開く関数*/
 func startZoom(classes []classData) {
-	fmt.Println("Zoomを開きます.")
 	trueNow := time.Now()
+	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
 	for _, class := range classes {
 		if class.Weekday == trueNow.Weekday().String() {
 			now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 			startTime, _ := time.Parse("15:04", class.Start)
+			startTime = startTime.Add(-10 * time.Minute)
 			endTime, _ := time.Parse("15:04", class.End)
 			if startTime.Before(now) && endTime.After(now) {
 				fmt.Println(class.Name, "のZoomを開きます")
