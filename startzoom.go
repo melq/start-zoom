@@ -68,7 +68,7 @@ func saveClasses(classes []classData, filename string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fp, err := os.OpenFile(filename, os.O_WRONLY, 0666)
+	fp, err := os.OpenFile(filename, os.O_WRONLY | os.O_TRUNC, 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -78,31 +78,53 @@ func saveClasses(classes []classData, filename string) {
 		panic(err)
 	}
 }
-/*新規登録する授業の構造体を作成する関数*/
-func registerClass() (cd classData) {
-	fmt.Println("新しく授業を登録します。")
+/*授業の名前を入力する関数*/
+func inputName() (name string) {
 	fmt.Print("授業名を入力:")
-	cd.Name = read()
-	fmt.Println()
-	tmp := InputNum("曜日を選択(開始時の曜日): 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday")
-	switch tmp {
-	case 1: cd.Weekday = "Sunday"
-	case 2: cd.Weekday = "Monday"
-	case 3: cd.Weekday = "Tuesday"
-	case 4: cd.Weekday = "Wednesday"
-	case 5: cd.Weekday = "Thursday"
-	case 6: cd.Weekday = "Friday"
-	case 7: cd.Weekday = "Saturday"
+	name = read()
+	return
+}
+/*授業の曜日を入力する関数*/
+func inputWeekday() (weekday string) {
+	switch InputNum("曜日を選択(開始時の曜日): 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday") {
+	case 1: weekday = "Sunday"
+	case 2: weekday = "Monday"
+	case 3: weekday = "Tuesday"
+	case 4: weekday = "Wednesday"
+	case 5: weekday = "Thursday"
+	case 6: weekday = "Friday"
+	case 7: weekday = "Saturday"
+	default: weekday = inputWeekday()
 	}
-	tmp = InputNum("開始時間を入力(例：14:30 => 1430 (半角数字))")
-	cd.Start = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
-	if tmp % 100 == 0 { cd.Start += "0" }
-	tmp = InputNum("終了時間を入力:")
-	cd.End = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
-	if tmp % 100 == 0 { cd.End += "0" }
+	return
+}
+/*授業の開始時刻を入力する関数*/
+func inputStartTime() (startTime string) {
+	tmp := InputNum("開始時刻を入力(例：14:30 => 1430 (半角数字))")
+	startTime = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { startTime += "0" }
+	return
+}
+/*授業の終了時刻を入力する関数*/
+func inputEndTime() (endTime string) {
+	tmp := InputNum("終了時刻を入力")
+	endTime = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { endTime += "0" }
+	return
+}
+/*授業のURLを入力する関数*/
+func inputUrl() (url string) {
 	fmt.Print("ZoomURLを入力:")
-	cd.Url = read()
-
+	url = read()
+	return
+}
+/*新規登録する授業の構造体を作成する関数*/
+func makeClass() (cd classData) {
+	cd.Name = inputName()
+	cd.Weekday = inputWeekday()
+	cd.Start = inputStartTime()
+	cd.End = inputEndTime()
+	cd.Url = inputUrl()
 	return
 }
 /*ブラウザでZoomを開く関数*/
@@ -126,6 +148,12 @@ func startZoom(classes []classData) {
 		}
 	}
 }
+/*授業単体の情報を表示する関数*/
+func showClassData(cd classData) {
+	fmt.Println(cd.Name)
+	fmt.Println("", cd.Weekday, cd.Start, "~", cd.End)
+	fmt.Println("", cd.Url)
+}
 /*登録授業のリストを表示する関数*/
 func showClassList(classes []classData) {
 	fmt.Println("\n登録されている授業を表示します.")
@@ -133,12 +161,55 @@ func showClassList(classes []classData) {
 	if len(classes) == 0 {
 		fmt.Println("登録授業なし")
 	} else {
-		for i, class := range classes {
-			fmt.Println(i+1, ":", class.Name)
-			fmt.Println("", class.Weekday, class.Start, "~", class.End)
-			fmt.Println("", class.Url)
+		for i, cd := range classes {
+			fmt.Print(i+1, ": ")
+			showClassData(cd)
 		}
 	}
+}
+/*登録授業単体を編集する関数*/
+func editClassData(cd classData) (editCd classData) {
+	editCd = cd
+	switch InputNum(editCd.Name + "の何を編集しますか？\n" +
+					"1: 名前, 2: 曜日, 3: 開始時刻, 4: 終了時刻, 5: URL, 6: すべて") {
+	case 1: editCd.Name = inputName()
+	case 2: editCd.Weekday = inputWeekday()
+	case 3: editCd.Start = inputStartTime()
+	case 4: editCd.End = inputEndTime()
+	case 5: editCd.Url = inputUrl()
+	case 6:
+		fmt.Println("すべて編集します")
+		editCd = makeClass()
+	default:
+		editCd = editClassData(cd)
+	}
+	return editCd
+}
+/*登録授業リストを編集する関数*/
+func editClasses(classes []classData) (editClasses []classData) {
+	if len(classes) == 0 {
+		fmt.Println("登録授業なし")
+		return classes
+	}
+	showClassList(classes)
+	fmt.Print("\n")
+	classNum := InputNum("編集したい授業の番号を入力してください(編集せず戻る場合は0)")
+	if classNum == 0 {
+		return classes
+	} else {
+		classNum -= 1
+		if classNum >= len(classes) || classNum < 0 {
+			fmt.Println("授業の番号が不正です")
+			return classes
+		} else {
+			editClasses = classes
+			editClasses[classNum] = editClassData(classes[classNum])
+			fmt.Println("\n編集が正常に終了しました")
+			fmt.Print("\n")
+			showClassData(editClasses[classNum])
+		}
+	}
+	return
 }
 /*メイン関数*/
 func StartZoomMain() {
@@ -153,17 +224,22 @@ func StartZoomMain() {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト") {
+		switch InputNum("\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除") {
 		case 0:
 			fmt.Println("終了します.")
 			flg = 1
 		case 1:
 			startZoom(classes)
 		case 2:
-			classes = append(classes, registerClass())
+			fmt.Println("新しく授業を登録します。")
+			classes = append(classes, makeClass())
 			saveClasses(classes, filename)
 		case 3:
 			showClassList(classes)
+		case 4:
+			classes = editClasses(classes)
+			saveClasses(classes, filename)
+		default:
 		}
 	}
 }
