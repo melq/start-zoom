@@ -168,31 +168,27 @@ func showClassList(classes []classData) {
 	}
 }
 /*登録授業単体を編集する関数*/
-func editClassData(cd classData) (editCd classData) {
-	editCd = cd
-	switch InputNum(editCd.Name + "の何を編集しますか？\n" +
+func editClassData(cd classData) (editedCd classData) {
+	editedCd = cd
+	switch InputNum(editedCd.Name + "の何を編集しますか？\n" +
 					"1: 名前, 2: 曜日, 3: 開始時刻, 4: 終了時刻, 5: URL, 6: すべて") {
-	case 1: editCd.Name = inputName()
-	case 2: editCd.Weekday = inputWeekday()
-	case 3: editCd.Start = inputStartTime()
-	case 4: editCd.End = inputEndTime()
-	case 5: editCd.Url = inputUrl()
+	case 1: editedCd.Name = inputName()
+	case 2: editedCd.Weekday = inputWeekday()
+	case 3: editedCd.Start = inputStartTime()
+	case 4: editedCd.End = inputEndTime()
+	case 5: editedCd.Url = inputUrl()
 	case 6:
 		fmt.Println("すべて編集します")
-		editCd = makeClass()
+		editedCd = makeClass()
 	default:
-		editCd = editClassData(cd)
+		editedCd = editClassData(cd)
 	}
-	return editCd
+	return editedCd
 }
 /*登録授業リストを編集する関数*/
-func editClasses(classes []classData) (editClasses []classData) {
-	if len(classes) == 0 {
-		fmt.Println("登録授業なし")
-		return classes
-	}
+func editClasses(classes []classData) (editedClasses []classData) {
 	showClassList(classes)
-	fmt.Print("\n")
+	fmt.Println("\n登録授業の編集をします")
 	classNum := InputNum("編集したい授業の番号を入力してください(編集せず戻る場合は0)")
 	if classNum == 0 {
 		return classes
@@ -202,12 +198,54 @@ func editClasses(classes []classData) (editClasses []classData) {
 			fmt.Println("授業の番号が不正です")
 			return classes
 		} else {
-			editClasses = classes
-			editClasses[classNum] = editClassData(classes[classNum])
+			editedClasses = classes
+			editedClasses[classNum] = editClassData(classes[classNum])
 			fmt.Println("\n編集が正常に終了しました")
 			fmt.Print("\n")
-			showClassData(editClasses[classNum])
+			showClassData(editedClasses[classNum])
 		}
+	}
+	return
+}
+/*登録授業単体の削除を行う関数*/
+func deleteClassData(classes []classData, index int) (editedClasses []classData) {
+	for i, cd := range classes {
+		if i == index { continue }
+		editedClasses = append(editedClasses, cd)
+	}
+	return
+}
+/*登録授業の削除を行う関数*/
+func deleteClasses(classes []classData) (editedClasses []classData) {
+	showClassList(classes)
+	fmt.Println("\n登録授業の削除をします")
+	classNum := InputNum("削除したい授業の番号を入力してください(削除せず戻る場合は0)")
+	if classNum == 0 {
+		return classes
+	} else {
+		classNum -= 1
+		if classNum >= len(classes) || classNum < 0 {
+			fmt.Println("授業の番号が不正です")
+			return classes
+		} else {
+			editedClasses = classes
+			editedClasses = deleteClassData(classes, classNum)
+			fmt.Println("\n削除が正常に終了しました")
+		}
+	}
+	return
+}
+/*登録授業を編集・削除する関数*/
+func editDeleteClasses(classes []classData) (editedClasses []classData) {
+	fmt.Println("登録授業の編集・削除を行います")
+	if len(classes) == 0 {
+		fmt.Println("登録授業なし")
+		return classes
+	}
+	switch InputNum("0: 戻る, 1: 編集, 2: 削除") {
+	case 1: editedClasses = editClasses(classes)
+	case 2: editedClasses = deleteClasses(classes)
+	default: return classes
 	}
 	return
 }
@@ -224,7 +262,7 @@ func StartZoomMain() {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除") {
+		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除") {
 		case 0:
 			fmt.Println("終了します.")
 			flg = 1
@@ -237,7 +275,7 @@ func StartZoomMain() {
 		case 3:
 			showClassList(classes)
 		case 4:
-			classes = editClasses(classes)
+			classes = editDeleteClasses(classes)
 			saveClasses(classes, filename)
 		default:
 		}
