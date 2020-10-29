@@ -16,6 +16,7 @@ import (
 type classData struct {
 	Name    string `json:"Name"`
 	Weekday string `json:"Weekday"`
+	Date 	string `json:"Date"`
 	Start   string `json:"Start"`
 	End     string `json:"End"`
 	Url     string `json:"Url"`
@@ -85,8 +86,14 @@ func inputName() (name string) {
 	return
 }
 /*授業の曜日を入力する関数*/
-func inputWeekday() (weekday string) {
-	switch InputNum("曜日を選択(開始時の曜日): 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday") {
+func inputWeekday() (weekday string, date string) {
+	date = ""
+	weekday = ""
+	fmt.Println("Zoomが開催される曜日を指定します また、毎週開催されるものでなくある日程のみのZoomの場合は、日付のみの指定も可能です")
+	switch InputNum("曜日(または日付指定)を選択: 0: 日付で指定する, 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday") {
+	case 0:
+		tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
+		date = strconv.Itoa(tmp / 100) + "-" + strconv.Itoa(tmp % 100)
 	case 1: weekday = "Sunday"
 	case 2: weekday = "Monday"
 	case 3: weekday = "Tuesday"
@@ -94,7 +101,7 @@ func inputWeekday() (weekday string) {
 	case 5: weekday = "Thursday"
 	case 6: weekday = "Friday"
 	case 7: weekday = "Saturday"
-	default: weekday = inputWeekday()
+	default: weekday, date = inputWeekday()
 	}
 	return
 }
@@ -121,30 +128,42 @@ func inputUrl() (url string) {
 /*新規登録する授業の構造体を作成する関数*/
 func makeClass() (cd classData) {
 	cd.Name = inputName()
-	cd.Weekday = inputWeekday()
+	cd.Weekday, cd.Date = inputWeekday()
 	cd.Start = inputStartTime()
 	cd.End = inputEndTime()
 	cd.Url = inputUrl()
 	return
 }
 /*ブラウザでZoomを開く関数*/
+func runZoom(trueNow time.Time, cd classData)  {
+	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
+	startTime, _ := time.Parse("15:04", cd.Start)
+	startTime = startTime.Add(-10 * time.Minute)
+	endTime, _ := time.Parse("15:04", cd.End)
+	if startTime.Before(now) && endTime.After(now) {
+		fmt.Println(cd.Name, "のZoomを開きます")
+		err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", cd.Url).Start()
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+}
+/*開くZoomを探す関数*/
 func startZoom(classes []classData) {
 	trueNow := time.Now()
 	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
-	for _, class := range classes {
-		if class.Weekday == trueNow.Weekday().String() {
-			now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
-			startTime, _ := time.Parse("15:04", class.Start)
-			startTime = startTime.Add(-10 * time.Minute)
-			endTime, _ := time.Parse("15:04", class.End)
-			if startTime.Before(now) && endTime.After(now) {
-				fmt.Println(class.Name, "のZoomを開きます")
-				err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", class.Url).Start()
-				if err != nil {
-					panic(err)
-				}
-				return
-			}
+	_, month, day := trueNow.Date()
+	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
+	for _, cd := range classes {
+		if cd.Date == today {
+			runZoom(trueNow, cd)
+			return
+		}
+	}
+	for _, cd := range classes {
+		if cd.Weekday == trueNow.Weekday().String() {
+			runZoom(trueNow, cd)
 		}
 	}
 	fmt.Println("現在または10分後に進行中の授業はありません")
@@ -152,7 +171,13 @@ func startZoom(classes []classData) {
 /*授業単体の情報を表示する関数*/
 func showClassData(cd classData) {
 	fmt.Println(cd.Name)
-	fmt.Println("", cd.Weekday, cd.Start, "~", cd.End)
+	var dayOrDate string
+	if cd.Date == "" {
+		dayOrDate = cd.Weekday
+	} else {
+		dayOrDate = cd.Date
+	}
+	fmt.Println("", dayOrDate, cd.Start, "~", cd.End)
 	fmt.Println("", cd.Url)
 }
 /*登録授業のリストを表示する関数*/
@@ -172,9 +197,9 @@ func showClassList(classes []classData) {
 func editClassData(cd classData) (editedCd classData) {
 	editedCd = cd
 	switch InputNum(editedCd.Name + "の何を編集しますか？\n" +
-					"1: 名前, 2: 曜日, 3: 開始時刻, 4: 終了時刻, 5: URL, 6: すべて") {
+					"1: 名前, 2: 曜日または日付, 3: 開始時刻, 4: 終了時刻, 5: URL, 6: すべて") {
 	case 1: editedCd.Name = inputName()
-	case 2: editedCd.Weekday = inputWeekday()
+	case 2: editedCd.Weekday, editedCd.Date = inputWeekday()
 	case 3: editedCd.Start = inputStartTime()
 	case 4: editedCd.End = inputEndTime()
 	case 5: editedCd.Url = inputUrl()
@@ -252,7 +277,6 @@ func deleteClasses(classes []classData) (editedClasses []classData) {
 				fmt.Println("削除せずに戻ります")
 				return classes
 			}
-
 		}
 	}
 	return
