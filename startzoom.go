@@ -73,7 +73,11 @@ func saveClasses(classes []classData, filename string) {
 	if err != nil {
 		panic(err)
 	}
-	defer fp.Close()
+	defer func() {
+		if err := fp.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
 	_, err = fp.Write(classJson)
 	if err != nil {
 		panic(err)
