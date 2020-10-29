@@ -147,6 +147,7 @@ func startZoom(classes []classData) {
 			}
 		}
 	}
+	fmt.Println("現在または10分後に進行中の授業はありません")
 }
 /*授業単体の情報を表示する関数*/
 func showClassData(cd classData) {
@@ -189,8 +190,9 @@ func editClassData(cd classData) (editedCd classData) {
 func editClasses(classes []classData) (editedClasses []classData) {
 	showClassList(classes)
 	fmt.Println("\n登録授業の編集をします")
-	classNum := InputNum("編集したい授業の番号を入力してください(編集せず戻る場合は0)")
+	classNum := InputNum("編集したい授業の番号を入力してください(編集せず戻る場合は「0」)")
 	if classNum == 0 {
+		fmt.Println("編集せずに戻ります")
 		return classes
 	} else {
 		classNum -= 1
@@ -219,18 +221,38 @@ func deleteClassData(classes []classData, index int) (editedClasses []classData)
 func deleteClasses(classes []classData) (editedClasses []classData) {
 	showClassList(classes)
 	fmt.Println("\n登録授業の削除をします")
-	classNum := InputNum("削除したい授業の番号を入力してください(削除せず戻る場合は0)")
+	classNum := InputNum("削除したい授業の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
 	if classNum == 0 {
+		fmt.Println("削除せずに戻ります")
 		return classes
+	} else if classNum == -1 {
+		fmt.Println("すべての授業データを削除します よろしいですか？")
+		switch InputNum("1: はい, 2: いいえ") {
+		case 1:
+			fmt.Println("すべてのデータを削除しました")
+			return editedClasses
+		default:
+			fmt.Println("削除せずに戻ります")
+			return classes
+		}
 	} else {
 		classNum -= 1
 		if classNum >= len(classes) || classNum < 0 {
 			fmt.Println("授業の番号が不正です")
 			return classes
 		} else {
-			editedClasses = classes
-			editedClasses = deleteClassData(classes, classNum)
-			fmt.Println("\n削除が正常に終了しました")
+			fmt.Println(classes[classNum].Name, "の授業データを削除します よろしいですか？")
+			switch InputNum("1: はい, 2: いいえ") {
+			case 1:
+				fmt.Println(classes[classNum].Name, "のデータを削除します)")
+				editedClasses = classes
+				editedClasses = deleteClassData(classes, classNum)
+				fmt.Println("\n削除が正常に終了しました")
+			case 2:
+				fmt.Println("削除せずに戻ります")
+				return classes
+			}
+
 		}
 	}
 	return
@@ -264,7 +286,7 @@ func StartZoomMain() {
 	for flg == 0 {
 		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除") {
 		case 0:
-			fmt.Println("終了します.")
+			fmt.Println("終了します")
 			flg = 1
 		case 1:
 			startZoom(classes)
