@@ -135,23 +135,35 @@ func makeClass() (cd classData) {
 	return
 }
 /*ブラウザでZoomを開く関数*/
+func runZoom(trueNow time.Time, cd classData)  {
+	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
+	startTime, _ := time.Parse("15:04", cd.Start)
+	startTime = startTime.Add(-10 * time.Minute)
+	endTime, _ := time.Parse("15:04", cd.End)
+	if startTime.Before(now) && endTime.After(now) {
+		fmt.Println(cd.Name, "のZoomを開きます")
+		err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", cd.Url).Start()
+		if err != nil {
+			panic(err)
+		}
+		return
+	}
+}
+/*開くZoomを探す関数*/
 func startZoom(classes []classData) {
 	trueNow := time.Now()
 	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
-	for _, class := range classes {
-		if class.Weekday == trueNow.Weekday().String() {
-			now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
-			startTime, _ := time.Parse("15:04", class.Start)
-			startTime = startTime.Add(-10 * time.Minute)
-			endTime, _ := time.Parse("15:04", class.End)
-			if startTime.Before(now) && endTime.After(now) {
-				fmt.Println(class.Name, "のZoomを開きます")
-				err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", class.Url).Start()
-				if err != nil {
-					panic(err)
-				}
-				return
-			}
+	_, month, day := trueNow.Date()
+	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
+	for _, cd := range classes {
+		if cd.Date == today {
+			runZoom(trueNow, cd)
+			return
+		}
+	}
+	for _, cd := range classes {
+		if cd.Weekday == trueNow.Weekday().String() {
+			runZoom(trueNow, cd)
 		}
 	}
 	fmt.Println("現在または10分後に進行中の授業はありません")
