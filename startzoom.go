@@ -70,12 +70,12 @@ func loadClasses(filename string) (config Config) {
 	return
 }
 /*jsonファイルに書き込む関数*/
-func saveClasses(config Config, filename string) {
+func saveConfig(config Config, filename string) {
 	classJson, err := json.Marshal(config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fp, err := os.OpenFile(filename, os.O_WRONLY | os.O_TRUNC, 0666)
+	fp, err := os.OpenFile(filename, os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0666)
 	if err != nil {
 		panic(err)
 	}
@@ -150,7 +150,7 @@ func runZoom(trueNow time.Time, cd ClassData, timeMargin int) bool {
 	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
-	fmt.Println("starttime: ", startTime)
+	fmt.Println("startTime: ", startTime)
 	endTime, _ := time.Parse("15:04", cd.End)
 	if startTime.Before(now) && endTime.After(now) {
 		fmt.Println(cd.Name, "のZoomを開きます")
@@ -307,6 +307,20 @@ func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	}
 	return
 }
+/**/
+func editTimeMargin(config Config) (timeMargin int) {
+	fmt.Println("Zoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
+	return InputNum("何分前から起動可能に設定しますか？")
+}
+/*設定変更を行う関数*/
+func editConfig(config Config) (editedConfig Config) {
+	fmt.Println("設定の変更をします")
+	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間") {
+	case 1: editedConfig.TimeMargin = editTimeMargin(config)
+	default: return config
+	}
+	return
+}
 /*メイン関数*/
 func StartZoomMain() {
 	filename := "classes.json"
@@ -320,7 +334,7 @@ func StartZoomMain() {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除") {
+		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 設定") {
 		case 0:
 			fmt.Println("終了します")
 			flg = 1
@@ -330,12 +344,15 @@ func StartZoomMain() {
 			fmt.Println("新しく授業を登録します。")
 			config.SumId++
 			config.ClassData = append(config.ClassData, makeClass(config.SumId))
-			saveClasses(config, filename)
+			saveConfig(config, filename)
 		case 3:
 			showClassList(config.ClassData)
 		case 4:
 			config.ClassData = editDeleteClasses(config.ClassData)
-			saveClasses(config, filename)
+			saveConfig(config, filename)
+		case 5:
+			config = editConfig(config)
+			saveConfig(config, filename)
 		default:
 		}
 	}
