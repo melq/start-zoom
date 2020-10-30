@@ -13,12 +13,13 @@ import (
 )
 
 type Config struct {
-	ClassData 	ClassData `json:"ClassData"`
+	ClassData 	[]ClassData `json:"ClassData"`
 	SumId 		int `json:"SumId"`
 	TimeMargin	int `json:"TimeMargin"`
 }
 /*授業の情報を格納する構造体*/
 type ClassData struct {
+	Id 		int `json:"Id"`
 	Name    string `json:"Name"`
 	Weekday string `json:"Weekday"`
 	Date 	string `json:"Date"`
@@ -50,8 +51,8 @@ func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
 }
-/*jsonファイルを読み込んで構造体の配列を返す関数*/
-func loadClasses(filename string) (classes []ClassData) {
+/*jsonファイルを読み込んで構造体を返す関数*/
+func loadClasses(filename string) (config Config) {
 	if !fileExists(filename) {
 		if _, err := os.Create(filename); err != nil {
 			log.Fatal(err)
@@ -62,15 +63,15 @@ func loadClasses(filename string) (classes []ClassData) {
 		log.Fatal(err)
 	}
 	if len(bytes) != 0 {
-		if err := json.Unmarshal(bytes, &classes); err != nil {
+		if err := json.Unmarshal(bytes, &config); err != nil {
 			log.Fatal(err)
 		}
 	}
 	return
 }
 /*jsonファイルに書き込む関数*/
-func saveClasses(classes []ClassData, filename string) {
-	classJson, err := json.Marshal(classes)
+func saveClasses(config Config, filename string) {
+	classJson, err := json.Marshal(config)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -135,7 +136,8 @@ func inputUrl() (url string) {
 	return
 }
 /*新規登録する授業の構造体を作成する関数*/
-func makeClass() (cd ClassData) {
+func makeClass(id int) (cd ClassData) {
+	cd.Id = id
 	cd.Name = inputName()
 	cd.Weekday, cd.Date = inputWeekday()
 	cd.Start = inputStartTime()
@@ -143,11 +145,12 @@ func makeClass() (cd ClassData) {
 	cd.Url = inputUrl()
 	return
 }
-/*ブラウザでZoomを開く関数*/
-func runZoom(trueNow time.Time, cd ClassData)  {
+/*時刻が適切ならばブラウザでZoomを開く関数*/
+func runZoom(trueNow time.Time, cd ClassData, timeMargin int) bool {
 	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
-	startTime = startTime.Add(-10 * time.Minute)
+	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
+	fmt.Println("starttime: ", startTime)
 	endTime, _ := time.Parse("15:04", cd.End)
 	if startTime.Before(now) && endTime.After(now) {
 		fmt.Println(cd.Name, "のZoomを開きます")
@@ -155,27 +158,27 @@ func runZoom(trueNow time.Time, cd ClassData)  {
 		if err != nil {
 			panic(err)
 		}
-		return
+		return true
 	}
+	return false
 }
-/*開くZoomを探す関数*/
-func startZoom(classes []ClassData) {
+/*曜日か日付が合致するZoomを探す関数*/
+func startZoom(classes []ClassData, timeMargin int) {
 	trueNow := time.Now()
 	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
 	_, month, day := trueNow.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
-		if cd.Date == today {
-			runZoom(trueNow, cd)
+		if cd.Date == today && runZoom(trueNow, cd, timeMargin) {
 			return
 		}
 	}
 	for _, cd := range classes {
-		if cd.Weekday == trueNow.Weekday().String() {
-			runZoom(trueNow, cd)
+		if cd.Weekday == trueNow.Weekday().String() && runZoom(trueNow, cd, timeMargin) {
+			return
 		}
 	}
-	fmt.Println("現在または10分後に進行中の授業はありません")
+	fmt.Println("現在または", timeMargin, "分後に進行中の授業はありません")
 }
 /*授業単体の情報を表示する関数*/
 func showClassData(cd ClassData) {
@@ -214,7 +217,7 @@ func editClassData(cd ClassData) (editedCd ClassData) {
 	case 5: editedCd.Url = inputUrl()
 	case 6:
 		fmt.Println("すべて編集します")
-		editedCd = makeClass()
+		editedCd = makeClass(editedCd.Id)
 	default:
 		editedCd = editClassData(cd)
 	}
@@ -307,7 +310,7 @@ func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 /*メイン関数*/
 func StartZoomMain() {
 	filename := "classes.json"
-	classes := loadClasses(filename)
+	config := loadClasses(filename)
 
 	fmt.Println("\n" +
 		"---------------------------------------------\n" +
@@ -322,16 +325,17 @@ func StartZoomMain() {
 			fmt.Println("終了します")
 			flg = 1
 		case 1:
-			startZoom(classes)
+			startZoom(config.ClassData, config.TimeMargin)
 		case 2:
 			fmt.Println("新しく授業を登録します。")
-			classes = append(classes, makeClass())
-			saveClasses(classes, filename)
+			config.SumId++
+			config.ClassData = append(config.ClassData, makeClass(config.SumId))
+			saveClasses(config, filename)
 		case 3:
-			showClassList(classes)
+			showClassList(config.ClassData)
 		case 4:
-			classes = editDeleteClasses(classes)
-			saveClasses(classes, filename)
+			config.ClassData = editDeleteClasses(config.ClassData)
+			saveClasses(config, filename)
 		default:
 		}
 	}
