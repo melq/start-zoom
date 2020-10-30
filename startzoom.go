@@ -12,8 +12,13 @@ import (
 	"time"
 )
 
+type Config struct {
+	ClassData 	ClassData `json:"ClassData"`
+	SumId 		int `json:"SumId"`
+	TimeMargin	int `json:"TimeMargin"`
+}
 /*授業の情報を格納する構造体*/
-type classData struct {
+type ClassData struct {
 	Name    string `json:"Name"`
 	Weekday string `json:"Weekday"`
 	Date 	string `json:"Date"`
@@ -46,7 +51,7 @@ func fileExists(filename string) bool {
 	return err == nil
 }
 /*jsonファイルを読み込んで構造体の配列を返す関数*/
-func loadClasses(filename string) (classes []classData) {
+func loadClasses(filename string) (classes []ClassData) {
 	if !fileExists(filename) {
 		if _, err := os.Create(filename); err != nil {
 			log.Fatal(err)
@@ -64,7 +69,7 @@ func loadClasses(filename string) (classes []classData) {
 	return
 }
 /*jsonファイルに書き込む関数*/
-func saveClasses(classes []classData, filename string) {
+func saveClasses(classes []ClassData, filename string) {
 	classJson, err := json.Marshal(classes)
 	if err != nil {
 		log.Fatal(err)
@@ -130,7 +135,7 @@ func inputUrl() (url string) {
 	return
 }
 /*新規登録する授業の構造体を作成する関数*/
-func makeClass() (cd classData) {
+func makeClass() (cd ClassData) {
 	cd.Name = inputName()
 	cd.Weekday, cd.Date = inputWeekday()
 	cd.Start = inputStartTime()
@@ -139,7 +144,7 @@ func makeClass() (cd classData) {
 	return
 }
 /*ブラウザでZoomを開く関数*/
-func runZoom(trueNow time.Time, cd classData)  {
+func runZoom(trueNow time.Time, cd ClassData)  {
 	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(-10 * time.Minute)
@@ -154,7 +159,7 @@ func runZoom(trueNow time.Time, cd classData)  {
 	}
 }
 /*開くZoomを探す関数*/
-func startZoom(classes []classData) {
+func startZoom(classes []ClassData) {
 	trueNow := time.Now()
 	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
 	_, month, day := trueNow.Date()
@@ -173,7 +178,7 @@ func startZoom(classes []classData) {
 	fmt.Println("現在または10分後に進行中の授業はありません")
 }
 /*授業単体の情報を表示する関数*/
-func showClassData(cd classData) {
+func showClassData(cd ClassData) {
 	fmt.Println(cd.Name)
 	var dayOrDate string
 	if cd.Date == "" {
@@ -185,7 +190,7 @@ func showClassData(cd classData) {
 	fmt.Println("", cd.Url)
 }
 /*登録授業のリストを表示する関数*/
-func showClassList(classes []classData) {
+func showClassList(classes []ClassData) {
 	fmt.Println("\n登録されている授業を表示します.")
 	fmt.Print("\n")
 	if len(classes) == 0 {
@@ -198,7 +203,7 @@ func showClassList(classes []classData) {
 	}
 }
 /*登録授業単体を編集する関数*/
-func editClassData(cd classData) (editedCd classData) {
+func editClassData(cd ClassData) (editedCd ClassData) {
 	editedCd = cd
 	switch InputNum(editedCd.Name + "の何を編集しますか？\n" +
 					"1: 名前, 2: 曜日または日付, 3: 開始時刻, 4: 終了時刻, 5: URL, 6: すべて") {
@@ -216,7 +221,7 @@ func editClassData(cd classData) (editedCd classData) {
 	return editedCd
 }
 /*登録授業リストを編集する関数*/
-func editClasses(classes []classData) (editedClasses []classData) {
+func editClasses(classes []ClassData) (editedClasses []ClassData) {
 	showClassList(classes)
 	fmt.Println("\n登録授業の編集をします")
 	classNum := InputNum("編集したい授業の番号を入力してください(編集せず戻る場合は「0」)")
@@ -239,7 +244,7 @@ func editClasses(classes []classData) (editedClasses []classData) {
 	return
 }
 /*登録授業単体の削除を行う関数*/
-func deleteClassData(classes []classData, index int) (editedClasses []classData) {
+func deleteClassData(classes []ClassData, index int) (editedClasses []ClassData) {
 	for i, cd := range classes {
 		if i == index { continue }
 		editedClasses = append(editedClasses, cd)
@@ -247,7 +252,7 @@ func deleteClassData(classes []classData, index int) (editedClasses []classData)
 	return
 }
 /*登録授業の削除を行う関数*/
-func deleteClasses(classes []classData) (editedClasses []classData) {
+func deleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	showClassList(classes)
 	fmt.Println("\n登録授業の削除をします")
 	classNum := InputNum("削除したい授業の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
@@ -286,7 +291,7 @@ func deleteClasses(classes []classData) (editedClasses []classData) {
 	return
 }
 /*登録授業を編集・削除する関数*/
-func editDeleteClasses(classes []classData) (editedClasses []classData) {
+func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	fmt.Println("登録授業の編集・削除を行います")
 	if len(classes) == 0 {
 		fmt.Println("登録授業なし")
