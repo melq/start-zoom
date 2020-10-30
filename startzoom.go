@@ -307,13 +307,14 @@ func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	}
 	return
 }
-/**/
+/*開始前の時間の余裕を設定する関数*/
 func editTimeMargin(config Config) (timeMargin int) {
 	fmt.Println("Zoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
 	return InputNum("何分前から起動可能に設定しますか？")
 }
 /*設定変更を行う関数*/
 func editConfig(config Config) (editedConfig Config) {
+	editedConfig = config
 	fmt.Println("設定の変更をします")
 	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間") {
 	case 1: editedConfig.TimeMargin = editTimeMargin(config)
