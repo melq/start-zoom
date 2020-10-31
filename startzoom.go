@@ -143,21 +143,25 @@ func makeClass(id int) (cd ClassData) {
 	cd.Start = inputStartTime()
 	cd.End = inputEndTime()
 	cd.Url = inputUrl()
+	fmt.Println(cd.Name, "を作成しました")
 	return
 }
-/*時刻が適切ならばブラウザでZoomを開く関数*/
-func runZoom(trueNow time.Time, cd ClassData, timeMargin int) bool {
+/*ZoomデータをもとにURLを開く関数*/
+func runZoom(cd ClassData)  {
+	fmt.Println(cd.Name, "のZoomを開きます")
+	err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", cd.Url).Start()
+	if err != nil {
+		panic(err)
+	}
+}
+/*Zoomデータから起動する時刻かどうか調べる関数*/
+func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
 	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
 	fmt.Println("startTime: ", startTime)
 	endTime, _ := time.Parse("15:04", cd.End)
 	if startTime.Before(now) && endTime.After(now) {
-		fmt.Println(cd.Name, "のZoomを開きます")
-		err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", cd.Url).Start()
-		if err != nil {
-			panic(err)
-		}
 		return true
 	}
 	return false
@@ -169,12 +173,14 @@ func startZoom(classes []ClassData, timeMargin int) {
 	_, month, day := trueNow.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
-		if cd.Date == today && runZoom(trueNow, cd, timeMargin) {
+		if cd.Date == today && checkTime(trueNow, cd, timeMargin) {
+			runZoom(cd)
 			return
 		}
 	}
 	for _, cd := range classes {
-		if cd.Weekday == trueNow.Weekday().String() && runZoom(trueNow, cd, timeMargin) {
+		if cd.Weekday == trueNow.Weekday().String() && checkTime(trueNow, cd, timeMargin) {
+			runZoom(cd)
 			return
 		}
 	}
@@ -225,8 +231,9 @@ func editClassData(cd ClassData) (editedCd ClassData) {
 }
 /*登録授業リストを編集する関数*/
 func editClasses(classes []ClassData) (editedClasses []ClassData) {
-	showClassList(classes)
 	fmt.Println("\n登録授業の編集をします")
+	showClassList(classes)
+	fmt.Print("\n")
 	classNum := InputNum("編集したい授業の番号を入力してください(編集せず戻る場合は「0」)")
 	if classNum == 0 {
 		fmt.Println("編集せずに戻ります")
@@ -256,8 +263,9 @@ func deleteClassData(classes []ClassData, index int) (editedClasses []ClassData)
 }
 /*登録授業の削除を行う関数*/
 func deleteClasses(classes []ClassData) (editedClasses []ClassData) {
-	showClassList(classes)
 	fmt.Println("\n登録授業の削除をします")
+	showClassList(classes)
+	fmt.Print("\n")
 	classNum := InputNum("削除したい授業の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
 	if classNum == 0 {
 		fmt.Println("削除せずに戻ります")
@@ -307,6 +315,23 @@ func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	}
 	return
 }
+/*選択してZoomを開始する関数*/
+func anytimeStart(classes []ClassData) {
+	fmt.Println("Zoom選んでを起動します")
+	showClassList(classes)
+	fmt.Print("\n")
+	classNum := InputNum("起動するZoomの番号を入力(戻る場合は0)")
+	if classNum == 0 {
+		fmt.Println("戻ります")
+		return
+	}
+	classNum--
+	if classNum >= len(classes) || classNum < 0 {
+		fmt.Println("授業の番号が不正です")
+		return
+	}
+	runZoom(classes[classNum])
+}
 /*開始前の時間の余裕を設定する関数*/
 func editTimeMargin(config Config) (timeMargin int) {
 	fmt.Println("Zoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
@@ -320,6 +345,7 @@ func editConfig(config Config) (editedConfig Config) {
 	case 1: editedConfig.TimeMargin = editTimeMargin(config)
 	default: return config
 	}
+	fmt.Println("設定を変更しました")
 	return
 }
 /*メイン関数*/
@@ -332,10 +358,11 @@ func StartZoomMain() {
 		"----------------- StartZoom -----------------\n" +
 		"----------- (made by RikuTsuzuki) -----------\n" +
 		"---------------------------------------------")
+	fmt.Print("\n")
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 設定") {
+		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 選択して授業開始, 6: 設定") {
 		case 0:
 			fmt.Println("終了します")
 			flg = 1
@@ -352,6 +379,8 @@ func StartZoomMain() {
 			config.ClassData = editDeleteClasses(config.ClassData)
 			saveConfig(config, filename)
 		case 5:
+			anytimeStart(config.ClassData)
+		case 6:
 			config = editConfig(config)
 			saveConfig(config, filename)
 		default:
