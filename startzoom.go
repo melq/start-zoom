@@ -143,6 +143,7 @@ func makeClass(id int) (cd ClassData) {
 	cd.Start = inputStartTime()
 	cd.End = inputEndTime()
 	cd.Url = inputUrl()
+	fmt.Println(cd.Name, "を作成しました")
 	return
 }
 /*ZoomデータをもとにURLを開く関数*/
@@ -209,7 +210,6 @@ func showClassList(classes []ClassData) {
 			showClassData(cd)
 		}
 	}
-	fmt.Print("\n")
 }
 /*登録授業単体を編集する関数*/
 func editClassData(cd ClassData) (editedCd ClassData) {
@@ -233,6 +233,7 @@ func editClassData(cd ClassData) (editedCd ClassData) {
 func editClasses(classes []ClassData) (editedClasses []ClassData) {
 	fmt.Println("\n登録授業の編集をします")
 	showClassList(classes)
+	fmt.Print("\n")
 	classNum := InputNum("編集したい授業の番号を入力してください(編集せず戻る場合は「0」)")
 	if classNum == 0 {
 		fmt.Println("編集せずに戻ります")
@@ -264,6 +265,7 @@ func deleteClassData(classes []ClassData, index int) (editedClasses []ClassData)
 func deleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	fmt.Println("\n登録授業の削除をします")
 	showClassList(classes)
+	fmt.Print("\n")
 	classNum := InputNum("削除したい授業の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
 	if classNum == 0 {
 		fmt.Println("削除せずに戻ります")
@@ -317,6 +319,7 @@ func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 func anytimeStart(classes []ClassData) {
 	fmt.Println("Zoom選んでを起動します")
 	showClassList(classes)
+	fmt.Print("\n")
 	classNum := InputNum("起動するZoomの番号を入力(戻る場合は0)")
 	if classNum == 0 {
 		fmt.Println("戻ります")
@@ -359,7 +362,7 @@ func StartZoomMain() {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 選択して授業開始, 6: 設定") {
+		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 選択して授業開始, 6: 設定") {
 		case 0:
 			fmt.Println("終了します")
 			flg = 1
