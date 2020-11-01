@@ -30,6 +30,15 @@ type ClassData struct {
 
 var sc = bufio.NewScanner(os.Stdin)
 
+/*intのスライスにある値が含まれているか調べる関数*/
+func contains (s []string, value string) bool {
+	for _, v := range s {
+		if value == v {
+			return true
+		}
+	}
+	return false
+}
 /*入力読み込み用関数*/
 func read() string {
 	sc.Scan()
@@ -159,7 +168,6 @@ func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
 	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
-	fmt.Println("startTime: ", startTime)
 	endTime, _ := time.Parse("15:04", cd.End)
 	if startTime.Before(now) && endTime.After(now) {
 		return true
@@ -349,10 +357,10 @@ func editConfig(config Config) (editedConfig Config) {
 	return
 }
 /*メイン関数*/
-func StartZoomMain() {
+func StartZoomMain(args []string) {
 	filename := "classes.json"
 	config := loadClasses(filename)
-
+	
 	fmt.Println("\n" +
 		"---------------------------------------------\n" +
 		"----------------- StartZoom -----------------\n" +

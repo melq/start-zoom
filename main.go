@@ -1,5 +1,9 @@
 package main
 
+import "flag"
+
 func main() {
-	StartZoomMain()
+	flag.Parse()
+	args := flag.Args()
+	StartZoomMain(args)
 }
