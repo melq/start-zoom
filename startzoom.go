@@ -168,7 +168,12 @@ func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
 /*曜日か日付が合致するZoomを探す関数*/
 func startZoom(classes []ClassData, timeMargin int) {
 	trueNow := time.Now()
-	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
+	hour := strconv.Itoa(trueNow.Hour())
+	min := strconv.Itoa(trueNow.Minute())
+	if trueNow.Minute() < 10 {
+		min = "0" + min
+	}
+	fmt.Println("現在時刻:", hour, ":", min)
 	_, month, day := trueNow.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
