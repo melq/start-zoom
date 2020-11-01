@@ -1,9 +1,19 @@
 package main
 
-import "flag"
+import (
+	"github.com/jessevdk/go-flags"
+	"os"
+)
+
+type Options struct {
+	Start []bool `short:"s" long:"start" description:"Get starting zoom"`
+}
+var opts Options
 
 func main() {
-	flag.Parse()
-	args := flag.Args()
-	StartZoomMain(args)
+	_, err := flags.Parse(&opts)
+	if err != nil {
+		os.Exit(1)
+	}
+	StartZoomMain(opts)
 }
