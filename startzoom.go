@@ -57,6 +57,7 @@ func loadClasses(filename string) (config Config) {
 		if _, err := os.Create(filename); err != nil {
 			log.Fatal(err)
 		}
+		config.TimeMargin = 10
 	}
 	bytes, err := ioutil.ReadFile(filename)	//json読み込み
 	if err != nil {
@@ -354,7 +355,7 @@ func editConfig(config Config) (editedConfig Config) {
 }
 /*メイン関数*/
 func StartZoomMain(opts Options) {
-	filename := "classes.json"
+	filename := "config.json"
 	config := loadClasses(filename)
 
 	if len(opts.Start) != 0 {
