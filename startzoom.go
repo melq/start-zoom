@@ -159,7 +159,6 @@ func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
 	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
-	fmt.Println("startTime: ", startTime)
 	endTime, _ := time.Parse("15:04", cd.End)
 	if startTime.Before(now) && endTime.After(now) {
 		return true
@@ -169,7 +168,12 @@ func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
 /*曜日か日付が合致するZoomを探す関数*/
 func startZoom(classes []ClassData, timeMargin int) {
 	trueNow := time.Now()
-	fmt.Println("現在時刻:", trueNow.Hour(), ":", trueNow.Minute())
+	hour := strconv.Itoa(trueNow.Hour())
+	min := strconv.Itoa(trueNow.Minute())
+	if trueNow.Minute() < 10 {
+		min = "0" + min
+	}
+	fmt.Println("現在時刻:", hour, ":", min)
 	_, month, day := trueNow.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
@@ -349,9 +353,14 @@ func editConfig(config Config) (editedConfig Config) {
 	return
 }
 /*メイン関数*/
-func StartZoomMain() {
+func StartZoomMain(opts Options) {
 	filename := "classes.json"
 	config := loadClasses(filename)
+
+	if len(opts.Start) != 0 {
+		startZoom(config.ClassData, config.TimeMargin)
+		return
+	}
 
 	fmt.Println("\n" +
 		"---------------------------------------------\n" +
