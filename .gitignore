@@ -1,5 +1,2 @@
-.github/
 .idea/
 config.json
-main.go
-startzoom.go
