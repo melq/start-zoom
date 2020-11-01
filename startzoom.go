@@ -30,7 +30,7 @@ type ClassData struct {
 
 var sc = bufio.NewScanner(os.Stdin)
 
-/*intのスライスにある値が含まれているか調べる関数*/
+/*スライスにある値が含まれているか調べる関数*/
 func contains (s []string, value string) bool {
 	for _, v := range s {
 		if value == v {
@@ -360,7 +360,12 @@ func editConfig(config Config) (editedConfig Config) {
 func StartZoomMain(args []string) {
 	filename := "classes.json"
 	config := loadClasses(filename)
-	
+
+	if contains(args, "start") {
+		startZoom(config.ClassData, config.TimeMargin)
+		return
+	}
+
 	fmt.Println("\n" +
 		"---------------------------------------------\n" +
 		"----------------- StartZoom -----------------\n" +
