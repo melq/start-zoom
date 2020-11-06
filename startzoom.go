@@ -92,7 +92,7 @@ func saveConfig(config Config, filename string) {
 }
 /*授業の名前を入力する関数*/
 func inputName() (name string) {
-	fmt.Print("授業名を入力:")
+	fmt.Print("\n授業名を入力:")
 	name = read()
 	return
 }
@@ -100,7 +100,7 @@ func inputName() (name string) {
 func inputWeekday() (weekday string, date string) {
 	date = ""
 	weekday = ""
-	fmt.Println("Zoomが開催される曜日を指定します また、毎週開催されるものでなくある日程のみのZoomの場合は、日付のみの指定も可能です")
+	fmt.Println("\nZoomが開催される曜日を指定します また、毎週開催されるものでなくある日程のみのZoomの場合は、日付のみの指定も可能です")
 	switch InputNum("曜日(または日付指定)を選択: 0: 日付で指定する, 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday") {
 	case 0:
 		tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
@@ -118,6 +118,7 @@ func inputWeekday() (weekday string, date string) {
 }
 /*授業の開始時刻を入力する関数*/
 func inputStartTime() (startTime string) {
+	fmt.Print("\n")
 	tmp := InputNum("開始時刻を入力(例：14:30 => 1430 (半角数字))")
 	startTime = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
 	if tmp % 100 == 0 { startTime += "0" }
@@ -125,6 +126,7 @@ func inputStartTime() (startTime string) {
 }
 /*授業の終了時刻を入力する関数*/
 func inputEndTime() (endTime string) {
+	fmt.Print("\n")
 	tmp := InputNum("終了時刻を入力")
 	endTime = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
 	if tmp % 100 == 0 { endTime += "0" }
@@ -132,7 +134,7 @@ func inputEndTime() (endTime string) {
 }
 /*授業のURLを入力する関数*/
 func inputUrl() (url string) {
-	fmt.Print("ZoomURLを入力:")
+	fmt.Print("\nZoomURLを入力:")
 	url = read()
 	return
 }
@@ -211,7 +213,7 @@ func showClassList(classes []ClassData) {
 		fmt.Println("登録授業なし")
 	} else {
 		for i, cd := range classes {
-			fmt.Print(i+1, ": ")
+			fmt.Print("\n", i+1, ": ")
 			showClassData(cd)
 		}
 	}
@@ -308,7 +310,7 @@ func deleteClasses(classes []ClassData) (editedClasses []ClassData) {
 }
 /*登録授業を編集・削除する関数*/
 func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
-	fmt.Println("登録授業の編集・削除を行います")
+	fmt.Println("\n登録授業の編集・削除を行います")
 	if len(classes) == 0 {
 		fmt.Println("登録授業なし")
 		return classes
@@ -322,7 +324,7 @@ func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 }
 /*選択してZoomを開始する関数*/
 func anytimeStart(classes []ClassData) {
-	fmt.Println("Zoom選んでを起動します")
+	fmt.Println("\nZoom選んでを起動します")
 	showClassList(classes)
 	fmt.Print("\n")
 	classNum := InputNum("起動するZoomの番号を入力(戻る場合は0)")
@@ -339,13 +341,13 @@ func anytimeStart(classes []ClassData) {
 }
 /*開始前の時間の余裕を設定する関数*/
 func editTimeMargin(config Config) (timeMargin int) {
-	fmt.Println("Zoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
+	fmt.Println("\nZoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
 	return InputNum("何分前から起動可能に設定しますか？")
 }
 /*設定変更を行う関数*/
 func editConfig(config Config) (editedConfig Config) {
 	editedConfig = config
-	fmt.Println("設定の変更をします")
+	fmt.Println("\n設定の変更をします")
 	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間") {
 	case 1: editedConfig.TimeMargin = editTimeMargin(config)
 	default: return config
