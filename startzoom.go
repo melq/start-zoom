@@ -13,10 +13,10 @@ import (
 )
 
 type Config struct {
-	ClassData 	[]ClassData `json:"ClassData"`
-	SumId 		int `json:"SumId"`
-	TimeMargin	int `json:"TimeMargin"`
-	IsAsk		bool `json:"IsAsk"`
+	Classes    []ClassData `json:"Classes"`
+	SumId      int         `json:"SumId"`
+	TimeMargin int         `json:"TimeMargin"`
+	IsAsk      bool        `json:"IsAsk"`
 }
 /*授業の情報を格納する構造体*/
 type ClassData struct {
@@ -172,7 +172,9 @@ func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
 	return false
 }
 /*曜日か日付が合致するZoomを探す関数*/
-func startZoom(classes []ClassData, timeMargin int) {
+func startZoom(config Config, timeMargin int) {
+	classes := config.Classes
+	var nearClass ClassData
 	trueNow := time.Now()
 	hour := strconv.Itoa(trueNow.Hour())
 	min := strconv.Itoa(trueNow.Minute())
@@ -184,17 +186,28 @@ func startZoom(classes []ClassData, timeMargin int) {
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
 		if cd.Date == today && checkTime(trueNow, cd, timeMargin) {
+			nearClass = cd
 			runZoom(cd)
 			return
 		}
 	}
 	for _, cd := range classes {
 		if cd.Weekday == trueNow.Weekday().String() && checkTime(trueNow, cd, timeMargin) {
+			nearClass = cd
 			runZoom(cd)
 			return
 		}
 	}
 	fmt.Println("現在または", timeMargin, "分後に進行中の授業はありません")
+	fmt.Print("\n")
+	if nearClass.Name != "" && config.IsAsk {
+		msg := nearClass.Start + " から " + nearClass.Name + " が始まりますが、起動しますか？" +
+			"\n1: はい, 2: いいえ"
+		if InputNum(msg) == 1 {
+		} else {
+			fmt.Println("起動せず戻ります")
+		}
+	}
 }
 /*授業単体の情報を表示する関数*/
 func showClassData(cd ClassData) {
@@ -351,7 +364,7 @@ func editTimeMargin(config Config) (timeMargin int) {
 func editConfig(config Config) (editedConfig Config) {
 	editedConfig = config
 	fmt.Println("\n設定の変更をします")
-	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間") {
+	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間, 2: ") {
 	case 1: editedConfig.TimeMargin = editTimeMargin(config)
 	default: return config
 	}
@@ -364,7 +377,7 @@ func StartZoomMain(opts Options) {
 	config := loadClasses(filename)
 
 	if len(opts.Start) != 0 {
-		startZoom(config.ClassData, config.TimeMargin)
+		startZoom(config, config.TimeMargin)
 		return
 	}
 
@@ -382,19 +395,19 @@ func StartZoomMain(opts Options) {
 			fmt.Println("終了します")
 			flg = 1
 		case 1:
-			startZoom(config.ClassData, config.TimeMargin)
+			startZoom(config, config.TimeMargin)
 		case 2:
 			fmt.Println("新しく授業を登録します。")
 			config.SumId++
-			config.ClassData = append(config.ClassData, makeClass(config.SumId))
+			config.Classes = append(config.Classes, makeClass(config.SumId))
 			saveConfig(config, filename)
 		case 3:
-			showClassList(config.ClassData)
+			showClassList(config.Classes)
 		case 4:
-			config.ClassData = editDeleteClasses(config.ClassData)
+			config.Classes = editDeleteClasses(config.Classes)
 			saveConfig(config, filename)
 		case 5:
-			anytimeStart(config.ClassData)
+			anytimeStart(config.Classes)
 		case 6:
 			config = editConfig(config)
 			saveConfig(config, filename)
