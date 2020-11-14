@@ -361,12 +361,23 @@ func editTimeMargin(config Config) (timeMargin int) {
 	fmt.Println("\nZoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
 	return InputNum("何分前から起動可能に設定しますか？")
 }
+/*該当Zoomがないときに近いZoomを開くかどうかを設定する関数*/
+func editIsAsk(config Config) bool {
+	fmt.Println("授業開始を選択した際に、開始時刻に該当するZoomがなかったときに、同じ日のなかで" +
+					"最も開始時刻の近いZoomを開くかどうかの質問の有無を設定します")
+	if InputNum("1: 聞く, 2: 聞かない") == 1 {
+		return true
+	} else {
+		return false
+	}
+}
 /*設定変更を行う関数*/
 func editConfig(config Config) (editedConfig Config) {
 	editedConfig = config
 	fmt.Println("\n設定の変更をします")
-	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間, 2: ") {
+	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間, 2: 該当Zoomがない場合の質問") {
 	case 1: editedConfig.TimeMargin = editTimeMargin(config)
+	case 2: editedConfig.IsAsk = editIsAsk(config)
 	default: return config
 	}
 	fmt.Println("設定を変更しました")
