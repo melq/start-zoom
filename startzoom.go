@@ -161,71 +161,83 @@ func runZoom(cd ClassData)  {
 	}
 }
 /*Zoomデータから起動する時刻かどうか調べる関数*/
-func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
-	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
+func checkTime(cd ClassData, timeMargin int) bool {
+	now := time.Now()
+	nowTime, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
 	endTime, _ := time.Parse("15:04", cd.End)
-	if startTime.Before(now) && endTime.After(now) {
+	if startTime.Before(nowTime) && endTime.After(nowTime) {
 		return true
 	}
 	return false
 }
-/*早い方のZoomデータを返す関数*/
-func earlyClass(data1 ClassData, data2 ClassData) ClassData {
+/*現在時刻より遅いかつ早い方のZoomデータを返す関数*/
+func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
+	now := time.Now()
+	timeNow, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
 	time1, _ := time.Parse("15:04", data1.Start)
 	time2, _ := time.Parse("15:04", data2.Start)
-	if time1.Before(time2) {
+	if timeNow.After(time1) && timeNow.After(time2) {
+		var cd ClassData
+		return cd
+	} else if timeNow.After(time1) {
+		return data2
+	} else if timeNow.After(time2) {
 		return data1
+	} else {
+		if time1.Before(time2) {
+			return data1
+		}
+		return data2
 	}
-	return data2
 }
 /*曜日か日付が合致するZoomを探す関数*/
 func startZoom(config Config, timeMargin int) {
 	classes := config.Classes
-	var nearClass ClassData
-	trueNow := time.Now()
-	hour := strconv.Itoa(trueNow.Hour())
-	min := strconv.Itoa(trueNow.Minute())
-	if trueNow.Minute() < 10 {
+	var nextClass ClassData
+	now := time.Now()
+	hour := strconv.Itoa(now.Hour())
+	min := strconv.Itoa(now.Minute())
+	if now.Minute() < 10 {
 		min = "0" + min
 	}
 	fmt.Println("現在時刻:", hour, ":", min)
-	_, month, day := trueNow.Date()
+	_, month, day := now.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
 		if cd.Date == today {
-			if checkTime(trueNow, cd, timeMargin) {
+			if checkTime(cd, timeMargin) {
 				runZoom(cd)
 				return
 			}
-			if nearClass.Name != "" {
-				nearClass = earlyClass(nearClass, cd)
+			if nextClass.Name != "" {
+				nextClass = getEarlierClass(nextClass, cd)
 			} else {
-				nearClass = cd
+				nextClass = cd
 			}
 		}
 	}
 	for _, cd := range classes {
-		if cd.Weekday == trueNow.Weekday().String() {
-			if checkTime(trueNow, cd, timeMargin) {
+		if cd.Weekday == now.Weekday().String() {
+			if checkTime(cd, timeMargin) {
 				runZoom(cd)
 				return
 			}
-			if nearClass.Name != "" {
-				nearClass = earlyClass(nearClass, cd)
+			if nextClass.Name != "" {
+				nextClass = getEarlierClass(nextClass, cd)
 			} else {
-				nearClass = cd
+				nextClass = cd
 			}
 		}
 	}
 	fmt.Println("現在または", timeMargin, "分後に進行中の授業はありません")
 	fmt.Print("\n")
-	if nearClass.Name != "" && config.IsAsk {
-		msg := nearClass.Start + " から " + nearClass.Name + " が始まりますが、起動しますか？" +
+	if nextClass.Name != "" && config.IsAsk {
+		msg := nextClass.Start + " から " + nextClass.Name + " が始まりますが、起動しますか？" +
 			"\n1: はい, 2: いいえ"
 		if InputNum(msg) == 1 {
-			runZoom(nearClass)
+			runZoom(nextClass)
 		} else {
 			fmt.Println("起動せず戻ります")
 		}
