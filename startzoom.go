@@ -199,7 +199,11 @@ func startZoom(config Config, timeMargin int) {
 				runZoom(cd)
 				return
 			}
-			nearClass = earlyClass(nearClass, cd)
+			if nearClass.Name != "" {
+				nearClass = earlyClass(nearClass, cd)
+			} else {
+				nearClass = cd
+			}
 		}
 	}
 	for _, cd := range classes {
@@ -208,7 +212,11 @@ func startZoom(config Config, timeMargin int) {
 				runZoom(cd)
 				return
 			}
-			nearClass = earlyClass(nearClass, cd)
+			if nearClass.Name != "" {
+				nearClass = earlyClass(nearClass, cd)
+			} else {
+				nearClass = cd
+			}
 		}
 	}
 	fmt.Println("現在または", timeMargin, "分後に進行中の授業はありません")
