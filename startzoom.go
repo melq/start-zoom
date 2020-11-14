@@ -171,6 +171,15 @@ func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
 	}
 	return false
 }
+/*早い方のZoomデータを返す関数*/
+func earlyClass(data1 ClassData, data2 ClassData) ClassData {
+	time1, _ := time.Parse("15:04", data1.Start)
+	time2, _ := time.Parse("15:04", data2.Start)
+	if time1.Before(time2) {
+		return data1
+	}
+	return data2
+}
 /*曜日か日付が合致するZoomを探す関数*/
 func startZoom(config Config, timeMargin int) {
 	classes := config.Classes
@@ -185,17 +194,21 @@ func startZoom(config Config, timeMargin int) {
 	_, month, day := trueNow.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
-		if cd.Date == today && checkTime(trueNow, cd, timeMargin) {
-			nearClass = cd
-			runZoom(cd)
-			return
+		if cd.Date == today {
+			if checkTime(trueNow, cd, timeMargin) {
+				runZoom(cd)
+				return
+			}
+			nearClass = earlyClass(nearClass, cd)
 		}
 	}
 	for _, cd := range classes {
-		if cd.Weekday == trueNow.Weekday().String() && checkTime(trueNow, cd, timeMargin) {
-			nearClass = cd
-			runZoom(cd)
-			return
+		if cd.Weekday == trueNow.Weekday().String() {
+			if checkTime(trueNow, cd, timeMargin) {
+				runZoom(cd)
+				return
+			}
+			nearClass = earlyClass(nearClass, cd)
 		}
 	}
 	fmt.Println("現在または", timeMargin, "分後に進行中の授業はありません")
