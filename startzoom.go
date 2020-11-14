@@ -204,6 +204,7 @@ func startZoom(config Config, timeMargin int) {
 		msg := nearClass.Start + " から " + nearClass.Name + " が始まりますが、起動しますか？" +
 			"\n1: はい, 2: いいえ"
 		if InputNum(msg) == 1 {
+			runZoom(nearClass)
 		} else {
 			fmt.Println("起動せず戻ります")
 		}
