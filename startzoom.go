@@ -13,9 +13,10 @@ import (
 )
 
 type Config struct {
-	ClassData 	[]ClassData `json:"ClassData"`
-	SumId 		int `json:"SumId"`
-	TimeMargin	int `json:"TimeMargin"`
+	Classes    []ClassData `json:"Classes"`
+	SumId      int         `json:"SumId"`
+	TimeMargin int         `json:"TimeMargin"`
+	IsAsk      bool        `json:"IsAsk"`
 }
 /*授業の情報を格納する構造体*/
 type ClassData struct {
@@ -57,7 +58,9 @@ func loadClasses(filename string) (config Config) {
 		if _, err := os.Create(filename); err != nil {
 			log.Fatal(err)
 		}
+		config.SumId = 0
 		config.TimeMargin = 10
+		config.IsAsk = false
 	}
 	bytes, err := ioutil.ReadFile(filename)	//json読み込み
 	if err != nil {
@@ -158,40 +161,87 @@ func runZoom(cd ClassData)  {
 	}
 }
 /*Zoomデータから起動する時刻かどうか調べる関数*/
-func checkTime(trueNow time.Time, cd ClassData, timeMargin int) bool {
-	now, _ := time.Parse("15:04", strconv.Itoa(trueNow.Hour())+ ":" +strconv.Itoa(trueNow.Minute()))
+func checkTime(cd ClassData, timeMargin int) bool {
+	now := time.Now()
+	nowTime, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
 	endTime, _ := time.Parse("15:04", cd.End)
-	if startTime.Before(now) && endTime.After(now) {
+	if startTime.Before(nowTime) && endTime.After(nowTime) {
 		return true
 	}
 	return false
 }
+/*現在時刻より遅いかつ早い方のZoomデータを返す関数*/
+func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
+	now := time.Now()
+	timeNow, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
+	time1, _ := time.Parse("15:04", data1.Start)
+	time2, _ := time.Parse("15:04", data2.Start)
+	if timeNow.After(time1) && timeNow.After(time2) {
+		var cd ClassData
+		return cd
+	} else if timeNow.After(time1) {
+		return data2
+	} else if timeNow.After(time2) {
+		return data1
+	} else {
+		if time1.Before(time2) {
+			return data1
+		}
+		return data2
+	}
+}
 /*曜日か日付が合致するZoomを探す関数*/
-func startZoom(classes []ClassData, timeMargin int) {
-	trueNow := time.Now()
-	hour := strconv.Itoa(trueNow.Hour())
-	min := strconv.Itoa(trueNow.Minute())
-	if trueNow.Minute() < 10 {
+func startZoom(config Config, timeMargin int) {
+	classes := config.Classes
+	var nextClass ClassData
+	now := time.Now()
+	hour := strconv.Itoa(now.Hour())
+	min := strconv.Itoa(now.Minute())
+	if now.Minute() < 10 {
 		min = "0" + min
 	}
 	fmt.Println("現在時刻:", hour, ":", min)
-	_, month, day := trueNow.Date()
+	_, month, day := now.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
-		if cd.Date == today && checkTime(trueNow, cd, timeMargin) {
-			runZoom(cd)
-			return
+		if cd.Date == today {
+			if checkTime(cd, timeMargin) {
+				runZoom(cd)
+				return
+			}
+			if nextClass.Name != "" {
+				nextClass = getEarlierClass(nextClass, cd)
+			} else {
+				nextClass = cd
+			}
 		}
 	}
 	for _, cd := range classes {
-		if cd.Weekday == trueNow.Weekday().String() && checkTime(trueNow, cd, timeMargin) {
-			runZoom(cd)
-			return
+		if cd.Weekday == now.Weekday().String() {
+			if checkTime(cd, timeMargin) {
+				runZoom(cd)
+				return
+			}
+			if nextClass.Name != "" {
+				nextClass = getEarlierClass(nextClass, cd)
+			} else {
+				nextClass = cd
+			}
 		}
 	}
 	fmt.Println("現在または", timeMargin, "分後に進行中の授業はありません")
+	fmt.Print("\n")
+	if nextClass.Name != "" && config.IsAsk {
+		msg := nextClass.Start + " から " + nextClass.Name + " が始まりますが、起動しますか？" +
+			"\n1: はい, 2: いいえ"
+		if InputNum(msg) == 1 {
+			runZoom(nextClass)
+		} else {
+			fmt.Println("起動せず戻ります")
+		}
+	}
 }
 /*授業単体の情報を表示する関数*/
 func showClassData(cd ClassData) {
@@ -344,12 +394,23 @@ func editTimeMargin(config Config) (timeMargin int) {
 	fmt.Println("\nZoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
 	return InputNum("何分前から起動可能に設定しますか？")
 }
+/*該当Zoomがないときに近いZoomを開くかどうかを設定する関数*/
+func editIsAsk(config Config) bool {
+	fmt.Println("授業開始を選択した際に、開始時刻に該当するZoomがなかったときに、同じ日のなかで" +
+					"最も開始時刻の近いZoomを開くかどうかの質問の有無を設定します")
+	if InputNum("1: 聞く, 2: 聞かない") == 1 {
+		return true
+	} else {
+		return false
+	}
+}
 /*設定変更を行う関数*/
 func editConfig(config Config) (editedConfig Config) {
 	editedConfig = config
 	fmt.Println("\n設定の変更をします")
-	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間") {
+	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間, 2: 該当Zoomがない場合の質問") {
 	case 1: editedConfig.TimeMargin = editTimeMargin(config)
+	case 2: editedConfig.IsAsk = editIsAsk(config)
 	default: return config
 	}
 	fmt.Println("設定を変更しました")
@@ -361,7 +422,7 @@ func StartZoomMain(opts Options) {
 	config := loadClasses(filename)
 
 	if len(opts.Start) != 0 {
-		startZoom(config.ClassData, config.TimeMargin)
+		startZoom(config, config.TimeMargin)
 		return
 	}
 
@@ -379,19 +440,19 @@ func StartZoomMain(opts Options) {
 			fmt.Println("終了します")
 			flg = 1
 		case 1:
-			startZoom(config.ClassData, config.TimeMargin)
+			startZoom(config, config.TimeMargin)
 		case 2:
 			fmt.Println("新しく授業を登録します。")
 			config.SumId++
-			config.ClassData = append(config.ClassData, makeClass(config.SumId))
+			config.Classes = append(config.Classes, makeClass(config.SumId))
 			saveConfig(config, filename)
 		case 3:
-			showClassList(config.ClassData)
+			showClassList(config.Classes)
 		case 4:
-			config.ClassData = editDeleteClasses(config.ClassData)
+			config.Classes = editDeleteClasses(config.Classes)
 			saveConfig(config, filename)
 		case 5:
-			anytimeStart(config.ClassData)
+			anytimeStart(config.Classes)
 		case 6:
 			config = editConfig(config)
 			saveConfig(config, filename)
