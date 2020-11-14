@@ -16,6 +16,7 @@ type Config struct {
 	ClassData 	[]ClassData `json:"ClassData"`
 	SumId 		int `json:"SumId"`
 	TimeMargin	int `json:"TimeMargin"`
+	IsAsk		bool `json:"IsAsk"`
 }
 /*授業の情報を格納する構造体*/
 type ClassData struct {
@@ -57,7 +58,9 @@ func loadClasses(filename string) (config Config) {
 		if _, err := os.Create(filename); err != nil {
 			log.Fatal(err)
 		}
+		config.SumId = 0
 		config.TimeMargin = 10
+		config.IsAsk = false
 	}
 	bytes, err := ioutil.ReadFile(filename)	//json読み込み
 	if err != nil {
