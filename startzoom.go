@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
 	"strconv"
 	"time"
 )
@@ -165,16 +166,16 @@ func makeClass(id int) (cd ClassData) {
 /*ZoomデータをもとにURLを開く関数*/
 func runZoom(cd ClassData)  {
 	fmt.Println(cd.Name, "のZoomを開きます")
-	//err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", cd.Url).Start()
-	//if err != nil {
-	//	panic(err)
-	//}
+	err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", cd.Url).Start()
+	if err != nil {
+		panic(err)
+	}
 }
 
 /*Zoomデータから起動する時刻かどうか調べる関数*/
 func checkTime(cd ClassData, timeMargin int) bool {
-	//now := time.Now()
-	nowTime, _ := time.Parse("15:04", "10:05"/*strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute())*/)
+	now := time.Now()
+	nowTime, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
 	endTime, _ := time.Parse("15:04", cd.End)
@@ -186,8 +187,8 @@ func checkTime(cd ClassData, timeMargin int) bool {
 
 /*現在時刻より遅いかつ開始の早い方のZoomデータを返す関数*/
 func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
-	//now := time.Now()
-	timeNow, _ := time.Parse("15:04", "10:05"/*strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute())*/)
+	now := time.Now()
+	timeNow, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
 	time1, _ := time.Parse("15:04", data1.Start)
 	time2, _ := time.Parse("15:04", data2.Start)
 	if timeNow.After(time1) && timeNow.After(time2) {
