@@ -192,7 +192,7 @@ func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
 	}
 }
 /*曜日か日付が合致するZoomを探す関数*/
-func startZoom(config Config, timeMargin int) {
+func startZoom(config Config) {
 	classes := config.Classes
 	var nextClass ClassData
 	now := time.Now()
@@ -206,7 +206,7 @@ func startZoom(config Config, timeMargin int) {
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
 		if cd.Date == today {
-			if checkTime(cd, timeMargin) {
+			if checkTime(cd, config.TimeMargin) {
 				runZoom(cd)
 				return
 			}
@@ -219,9 +219,9 @@ func startZoom(config Config, timeMargin int) {
 	}
 	for _, cd := range classes {
 		if cd.Weekday == now.Weekday().String() {
-			if checkTime(cd, timeMargin) {
+			if checkTime(cd, config.TimeMargin) {
 				runZoom(cd)
-				return
+				//return
 			}
 			if nextClass.Name != "" {
 				nextClass = getEarlierClass(nextClass, cd)
@@ -230,9 +230,9 @@ func startZoom(config Config, timeMargin int) {
 			}
 		}
 	}
-	fmt.Println("現在または", timeMargin, "分後に進行中の授業はありません")
+	fmt.Println("現在または", config.TimeMargin, "分後に進行中の授業はありません")
 	fmt.Print("\n")
-	if nextClass.Name != "" && config.IsAsk {
+	if true/*nextClass.Name != "" && config.IsAsk*/ {
 		msg := nextClass.Start + " から " + nextClass.Name + " が始まりますが、起動しますか？" +
 			"\n1: はい, 2: いいえ"
 		if InputNum(msg) == 1 {
@@ -421,7 +421,7 @@ func StartZoomMain(opts Options) {
 	config := loadClasses(filename)
 
 	if len(opts.Start) != 0 {
-		startZoom(config, config.TimeMargin)
+		startZoom(config)
 		return
 	}
 
@@ -439,7 +439,7 @@ func StartZoomMain(opts Options) {
 			fmt.Println("終了します")
 			flg = 1
 		case 1:
-			startZoom(config, config.TimeMargin)
+			startZoom(config)
 		case 2:
 			fmt.Println("新しく授業を登録します。")
 			config.SumId++
