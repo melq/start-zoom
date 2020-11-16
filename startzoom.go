@@ -175,7 +175,7 @@ func runZoom(cd ClassData)  {
 /*Zoomデータから起動する時刻かどうか調べる関数*/
 func checkTime(cd ClassData, timeMargin int) bool {
 	now := time.Now()
-	nowTime, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
+	nowTime, _ := time.Parse("15:4", strconv.Itoa(now.Hour())+ ":" + strconv.Itoa(now.Minute()))
 	startTime, _ := time.Parse("15:04", cd.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
 	endTime, _ := time.Parse("15:04", cd.End)
@@ -188,15 +188,15 @@ func checkTime(cd ClassData, timeMargin int) bool {
 /*現在時刻より遅いかつ開始の早い方のZoomデータを返す関数*/
 func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
 	now := time.Now()
-	timeNow, _ := time.Parse("15:04", strconv.Itoa(now.Hour())+ ":" +strconv.Itoa(now.Minute()))
+	nowTime, _ := time.Parse("15:4", strconv.Itoa(now.Hour())+ ":" + strconv.Itoa(now.Minute()))
 	time1, _ := time.Parse("15:04", data1.Start)
 	time2, _ := time.Parse("15:04", data2.Start)
-	if timeNow.After(time1) && timeNow.After(time2) {
+	if nowTime.After(time1) && nowTime.After(time2) {
 		var cd ClassData
 		return cd
-	} else if timeNow.After(time1) {
+	} else if nowTime.After(time1) {
 		return data2
-	} else if timeNow.After(time2) {
+	} else if nowTime.After(time2) {
 		return data1
 	} else {
 		if time1.Before(time2) {
