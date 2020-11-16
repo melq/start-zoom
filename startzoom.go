@@ -35,6 +35,7 @@ func read() string {
 	sc.Scan()
 	return sc.Text()
 }
+
 /*数値入力用関数*/
 func InputNum (msg string) int {
 	for {
@@ -46,11 +47,13 @@ func InputNum (msg string) int {
 		return i
 	}
 }
+
 /*ファイルの存在を確認する関数*/
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
 	return err == nil
 }
+
 /*jsonファイルを読み込んで構造体を返す関数*/
 func loadClasses(filename string) (config Config) {
 	if !fileExists(filename) {
@@ -72,6 +75,7 @@ func loadClasses(filename string) (config Config) {
 	}
 	return
 }
+
 /*jsonファイルに書き込む関数*/
 func saveConfig(config Config, filename string) {
 	classJson, err := json.Marshal(config)
@@ -92,12 +96,14 @@ func saveConfig(config Config, filename string) {
 		panic(err)
 	}
 }
+
 /*授業の名前を入力する関数*/
 func inputName() (name string) {
 	fmt.Print("\n授業名を入力:")
 	name = read()
 	return
 }
+
 /*授業の曜日を入力する関数*/
 func inputWeekday() (weekday string, date string) {
 	date = ""
@@ -118,6 +124,7 @@ func inputWeekday() (weekday string, date string) {
 	}
 	return
 }
+
 /*授業の開始時刻を入力する関数*/
 func inputStartTime() (startTime string) {
 	fmt.Print("\n")
@@ -126,6 +133,7 @@ func inputStartTime() (startTime string) {
 	if tmp % 100 == 0 { startTime += "0" }
 	return
 }
+
 /*授業の終了時刻を入力する関数*/
 func inputEndTime() (endTime string) {
 	fmt.Print("\n")
@@ -134,12 +142,14 @@ func inputEndTime() (endTime string) {
 	if tmp % 100 == 0 { endTime += "0" }
 	return
 }
+
 /*授業のURLを入力する関数*/
 func inputUrl() (url string) {
 	fmt.Print("\nZoomURLを入力:")
 	url = read()
 	return
 }
+
 /*新規登録する授業の構造体を作成する関数*/
 func makeClass(id int) (cd ClassData) {
 	cd.Id = id
@@ -151,6 +161,7 @@ func makeClass(id int) (cd ClassData) {
 	fmt.Println(cd.Name, "を作成しました")
 	return
 }
+
 /*ZoomデータをもとにURLを開く関数*/
 func runZoom(cd ClassData)  {
 	fmt.Println(cd.Name, "のZoomを開きます")
@@ -159,6 +170,7 @@ func runZoom(cd ClassData)  {
 	//	panic(err)
 	//}
 }
+
 /*Zoomデータから起動する時刻かどうか調べる関数*/
 func checkTime(cd ClassData, timeMargin int) bool {
 	//now := time.Now()
@@ -171,6 +183,7 @@ func checkTime(cd ClassData, timeMargin int) bool {
 	}
 	return false
 }
+
 /*現在時刻より遅いかつ開始の早い方のZoomデータを返す関数*/
 func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
 	//now := time.Now()
@@ -191,6 +204,7 @@ func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
 		return data2
 	}
 }
+
 /*曜日か日付が合致するZoomを探す関数*/
 func startZoom(config Config) {
 	classes := config.Classes
@@ -242,6 +256,7 @@ func startZoom(config Config) {
 		}
 	}
 }
+
 /*授業単体の情報を表示する関数*/
 func showClassData(cd ClassData) {
 	fmt.Println(cd.Name)
@@ -254,6 +269,7 @@ func showClassData(cd ClassData) {
 	fmt.Println("", dayOrDate, cd.Start, "~", cd.End)
 	fmt.Println("", cd.Url)
 }
+
 /*登録授業のリストを表示する関数*/
 func showClassList(classes []ClassData) {
 	fmt.Println("\n登録されている授業を表示します.")
@@ -267,6 +283,7 @@ func showClassList(classes []ClassData) {
 		}
 	}
 }
+
 /*登録授業単体を編集する関数*/
 func editClassData(cd ClassData) (editedCd ClassData) {
 	editedCd = cd
@@ -285,6 +302,7 @@ func editClassData(cd ClassData) (editedCd ClassData) {
 	}
 	return editedCd
 }
+
 /*登録授業リストを編集する関数*/
 func editClasses(classes []ClassData) (editedClasses []ClassData) {
 	fmt.Println("\n登録授業の編集をします")
@@ -309,6 +327,7 @@ func editClasses(classes []ClassData) (editedClasses []ClassData) {
 	}
 	return
 }
+
 /*登録授業単体の削除を行う関数*/
 func deleteClassData(classes []ClassData, index int) (editedClasses []ClassData) {
 	for i, cd := range classes {
@@ -317,6 +336,7 @@ func deleteClassData(classes []ClassData, index int) (editedClasses []ClassData)
 	}
 	return
 }
+
 /*登録授業の削除を行う関数*/
 func deleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	fmt.Println("\n登録授業の削除をします")
@@ -357,6 +377,7 @@ func deleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	}
 	return
 }
+
 /*登録授業を編集・削除する関数*/
 func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	fmt.Println("\n登録授業の編集・削除を行います")
@@ -371,6 +392,7 @@ func editDeleteClasses(classes []ClassData) (editedClasses []ClassData) {
 	}
 	return
 }
+
 /*選択してZoomを開始する関数*/
 func anytimeStart(classes []ClassData) {
 	fmt.Println("\nZoom選んでを起動します")
@@ -388,11 +410,13 @@ func anytimeStart(classes []ClassData) {
 	}
 	runZoom(classes[classNum])
 }
+
 /*開始前の時間の余裕を設定する関数*/
 func editTimeMargin(config Config) (timeMargin int) {
 	fmt.Println("\nZoom開始時刻の何分前から起動するようにするか設定します(現在は", config.TimeMargin, "分)")
 	return InputNum("何分前から起動可能に設定しますか？")
 }
+
 /*該当Zoomがないときに近いZoomを開くかどうかを設定する関数*/
 func editIsAsk(config Config) bool {
 	fmt.Println("授業開始を選択した際に、開始時刻に該当するZoomがなかったときに、同じ日のなかで" +
@@ -403,6 +427,7 @@ func editIsAsk(config Config) bool {
 		return false
 	}
 }
+
 /*設定変更を行う関数*/
 func editConfig(config Config) (editedConfig Config) {
 	editedConfig = config
@@ -415,6 +440,7 @@ func editConfig(config Config) (editedConfig Config) {
 	fmt.Println("設定を変更しました")
 	return
 }
+
 /*メイン関数*/
 func StartZoomMain(opts Options) {
 	filename := "config.json"
