@@ -209,20 +209,20 @@ func getEarlierClass(data1 ClassData, data2 ClassData) ClassData {
 func startZoom(config Config) {
 	classes := config.Classes
 	var nextClass ClassData
+	var currentClass ClassData
 	now := time.Now()
 	hour := strconv.Itoa(now.Hour())
 	min := strconv.Itoa(now.Minute())
 	if now.Minute() < 10 {
 		min = "0" + min
 	}
-	fmt.Println("現在時刻:", hour, ":", min, "10:05")
+	fmt.Println("現在時刻:", hour, ":", min)
 	_, month, day := now.Date()
 	today := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 	for _, cd := range classes {
 		if cd.Date == today {
 			if checkTime(cd, config.TimeMargin) {
-				runZoom(cd)
-				return
+				currentClass = cd
 			}
 			if nextClass.Name != "" {
 				nextClass = getEarlierClass(nextClass, cd)
@@ -234,8 +234,7 @@ func startZoom(config Config) {
 	for _, cd := range classes {
 		if cd.Weekday == now.Weekday().String() {
 			if checkTime(cd, config.TimeMargin) {
-				runZoom(cd)
-				//return
+				currentClass = cd
 			}
 			if nextClass.Name != "" {
 				nextClass = getEarlierClass(nextClass, cd)
@@ -244,15 +243,23 @@ func startZoom(config Config) {
 			}
 		}
 	}
-	fmt.Println("現在または", config.TimeMargin, "分後に進行中の授業はありません")
-	fmt.Print("\n")
-	if true/*nextClass.Name != "" && config.IsAsk*/ {
-		msg := nextClass.Start + " から " + nextClass.Name + " が始まりますが、起動しますか？" +
-			"\n1: はい, 2: いいえ"
-		if InputNum(msg) == 1 {
+	if currentClass.Name != "" {
+		if nextClass.Name != "" && checkTime(nextClass, config.TimeMargin) {
 			runZoom(nextClass)
 		} else {
-			fmt.Println("起動せず戻ります")
+			runZoom(currentClass)
+		}
+	} else {
+		fmt.Println("現在または", config.TimeMargin, "分後に進行中の授業はありません")
+		fmt.Print("\n")
+		if nextClass.Name != "" && config.IsAsk {
+			msg := nextClass.Start + " から " + nextClass.Name + " が始まりますが、起動しますか？" +
+				"\n1: はい, 2: いいえ"
+			if InputNum(msg) == 1 {
+				runZoom(nextClass)
+			} else {
+				fmt.Println("起動せず戻ります")
+			}
 		}
 	}
 }
