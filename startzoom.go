@@ -18,6 +18,7 @@ type Config struct {
 	TimeMargin int         `json:"TimeMargin"`
 	IsAsk      bool        `json:"IsAsk"`
 }
+
 /*授業の情報を格納する構造体*/
 type ClassData struct {
 	Id 		int `json:"Id"`
@@ -27,6 +28,14 @@ type ClassData struct {
 	Start   string `json:"Start"`
 	End     string `json:"End"`
 	Url     string `json:"Url"`
+}
+
+/*Zoomデータ構造体が空かどうか返す関数*/
+func (cd ClassData) isEmpty() bool {
+	if cd.Name == "" {
+		return true
+	}
+	return false
 }
 
 var sc = bufio.NewScanner(os.Stdin)
@@ -225,10 +234,10 @@ func startZoom(config Config) {
 			if checkTime(cd, config.TimeMargin) {
 				currentClass = cd
 			}
-			if nextClass.Name != "" {
-				nextClass = getEarlierClass(nextClass, cd)
-			} else {
+			if nextClass.isEmpty() {
 				nextClass = cd
+			} else {
+				nextClass = getEarlierClass(nextClass, cd)
 			}
 		}
 	}
@@ -237,23 +246,17 @@ func startZoom(config Config) {
 			if checkTime(cd, config.TimeMargin) {
 				currentClass = cd
 			}
-			if nextClass.Name != "" {
-				nextClass = getEarlierClass(nextClass, cd)
-			} else {
+			if nextClass.isEmpty() {
 				nextClass = cd
+			} else {
+				nextClass = getEarlierClass(nextClass, cd)
 			}
 		}
 	}
-	if currentClass.Name != "" {
-		if nextClass.Name != "" && checkTime(nextClass, config.TimeMargin) {
-			runZoom(nextClass)
-		} else {
-			runZoom(currentClass)
-		}
-	} else {
+	if currentClass.isEmpty() {
 		fmt.Println("現在または", config.TimeMargin, "分後に進行中の授業はありません")
 		fmt.Print("\n")
-		if nextClass.Name != "" && config.IsAsk {
+		if !nextClass.isEmpty() && config.IsAsk {
 			msg := nextClass.Start + " から " + nextClass.Name + " が始まりますが、起動しますか？" +
 				"\n1: はい, 2: いいえ"
 			if InputNum(msg) == 1 {
@@ -261,6 +264,12 @@ func startZoom(config Config) {
 			} else {
 				fmt.Println("起動せず戻ります")
 			}
+		}
+	} else {
+		if !nextClass.isEmpty() && checkTime(nextClass, config.TimeMargin) {
+			runZoom(nextClass)
+		} else {
+			runZoom(currentClass)
 		}
 	}
 }
@@ -426,7 +435,7 @@ func editTimeMargin(config Config) (timeMargin int) {
 }
 
 /*該当Zoomがないときに近いZoomを開くかどうかを設定する関数*/
-func editIsAsk(config Config) bool {
+func editIsAsk() bool {
 	fmt.Println("授業開始を選択した際に、開始時刻に該当するZoomがなかったときに、同じ日のなかで" +
 					"最も開始時刻の近いZoomを開くかどうかの質問の有無を設定します")
 	if InputNum("1: 聞く, 2: 聞かない") == 1 {
@@ -442,7 +451,7 @@ func editConfig(config Config) (editedConfig Config) {
 	fmt.Println("\n設定の変更をします")
 	switch InputNum("0: 戻る, 1: Zoom開始前の余裕時間, 2: 該当Zoomがない場合の質問") {
 	case 1: editedConfig.TimeMargin = editTimeMargin(config)
-	case 2: editedConfig.IsAsk = editIsAsk(config)
+	case 2: editedConfig.IsAsk = editIsAsk()
 	default: return config
 	}
 	fmt.Println("設定を変更しました")
