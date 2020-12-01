@@ -458,6 +458,11 @@ func editConfig(config Config) (editedConfig Config) {
 	return
 }
 
+/*自動起動モードへ移行する関数*/
+func autoStart() {
+	fmt.Printf("自動起動モード")
+}
+
 /*メイン関数*/
 func StartZoomMain(opts Options) {
 	filename := "config.json"
@@ -477,7 +482,8 @@ func StartZoomMain(opts Options) {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 選択して授業開始, 6: 設定") {
+		switch InputNum("\n行いたい操作の番号を入力してください\n" +
+			"0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 選択して授業開始, 6: 設定, 7: 自動起動モード") {
 		case 0:
 			fmt.Println("終了します")
 			flg = 1
@@ -498,6 +504,8 @@ func StartZoomMain(opts Options) {
 		case 6:
 			config = editConfig(config)
 			saveConfig(config, filename)
+		case 7:
+			autoStart()
 		default:
 		}
 	}
