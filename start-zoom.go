@@ -1,13 +1,23 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"log"
+	"os"
 	"os/exec"
 	"startZoom/repository"
 	"strconv"
 	"time"
 )
+
+var sc = bufio.NewScanner(os.Stdin)
+
+/*入力読み込み用関数*/
+func read() string {
+	sc.Scan()
+	return sc.Text()
+}
 
 // InputNum /*数値入力用関数*/
 func InputNum (msg string) int {
@@ -112,7 +122,7 @@ func startMeet(config repository.Config) {
 			runMeet(currentMeet)
 		}
 	} else {
-		fmt.Println("現在または", config.TimeMargin, "分後に進行中の授業はありません")
+		fmt.Println("現在または", config.TimeMargin, "分後に進行中の会議はありません")
 		fmt.Print("\n")
 		if nextMeet.IsNotEmpty() && config.IsAsk {
 			msg := nextMeet.Start + " から " + nextMeet.Name + " が始まりますが、起動しますか？" +
@@ -126,7 +136,50 @@ func startMeet(config repository.Config) {
 	}
 }
 
-// StartZoomMain メイン関数
+func makeMeet(config repository.Config, filename string) {
+	fmt.Println("新しく会議を登録します")
+	config.SumId++
+	meet := repository.NewMeet()
+
+	meet.Id = config.SumId
+
+	fmt.Print("\n授業名を入力:")
+	meet.Name = read()
+
+	fmt.Println("\nZoomが開催される曜日を指定。毎週開催されるものでなくある日程のみの会議の場合は、日付のみの指定も可能です")
+	Weekday: for {
+		n := InputNum("曜日(または日付指定)を選択: 0: 日付で指定する, 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday")
+		switch n {
+		case 0:
+			tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
+			meet.Date = strconv.Itoa(tmp / 100) + "-" + strconv.Itoa(tmp % 100)
+			break Weekday
+		case 1, 2, 3, 4, 5, 6, 7:
+			meet.Weekday = repository.WeekdayString[n - 1]
+			break Weekday
+		default:
+		}
+	}
+
+	fmt.Println()
+	tmp := InputNum("開始時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
+	meet.Start = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { meet.Start += "0" }
+
+	fmt.Println()
+	tmp = InputNum("終了時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
+	meet.End = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { meet.End += "0" }
+
+	fmt.Println("\n会議のURLを入力")
+	meet.Url = read()
+
+	config.Meets = append(config.Meets, meet)
+	repository.SaveConfig(config, filename)
+
+	fmt.Println(meet.Name, "を作成しました")
+}
+
 func StartZoomMain(opts Options) {
 	filename := "config.json"
 	config := repository.LoadConfig(filename)
@@ -145,17 +198,14 @@ func StartZoomMain(opts Options) {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 授業開始, 2: 授業登録, 3: 授業リスト, 4: 登録授業の編集・削除, 5: 選択して授業開始, 6: 設定") {
+		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 会議開始, 2: 会議登録, 3: 授業リスト, 4: 登録会議の編集・削除, 5: 選択して会議開始, 6: 設定") {
 		case 0:
 			fmt.Println("終了します")
 			flg = 1
 		case 1:
 			startMeet(config)
 		case 2:
-			fmt.Println("新しく授業を登録します。")
-			config.SumId++
-			config.Classes = append(config.Classes, makeClass(config.SumId))
-			saveConfig(config, filename)
+			makeMeet(config, filename)
 		case 3:
 			showClassList(config.Classes)
 		case 4:
