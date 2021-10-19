@@ -180,6 +180,34 @@ func makeMeet(config repository.Config, filename string) {
 	fmt.Println(meet.Name, "を作成しました")
 }
 
+func showMeet(meet repository.Meet) {
+	fmt.Println(meet.Name)
+	fmt.Println(" URL:", meet.Url)
+	if len(meet.Weekday) > 0 {
+		fmt.Println(" 曜日:", meet.Weekday)
+	} else {
+		meetDate, err := time.Parse("01-02", meet.Date)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		fmt.Println(" 日時:", meetDate)
+	}
+	fmt.Println(" 時刻:", meet.Start, "-", meet.End)
+}
+
+func showMeets(config repository.Config) {
+	fmt.Println("登録されている会議を表示します")
+	fmt.Println()
+	if len(config.Meets) == 0 {
+		fmt.Println("登録会議なし")
+	} else {
+		for i, meet := range config.Meets {
+			fmt.Print("\n", i + 1, ": ")
+			showMeet(meet)
+		}
+	}
+}
+
 func StartZoomMain(opts Options) {
 	filename := "config.json"
 	config := repository.LoadConfig(filename)
@@ -207,7 +235,7 @@ func StartZoomMain(opts Options) {
 		case 2:
 			makeMeet(config, filename)
 		case 3:
-			showClassList(config.Classes)
+			showMeets(config)
 		case 4:
 			config.Classes = editDeleteClasses(config.Classes)
 			saveConfig(config, filename)
