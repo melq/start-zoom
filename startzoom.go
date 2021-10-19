@@ -13,7 +13,7 @@ import (
 )
 
 type Config struct {
-	Classes    []ClassData `json:"Classes"`
+	Classes    []ClassData `json:"Meets"`
 	SumId      int         `json:"SumId"`
 	TimeMargin int         `json:"TimeMargin"`
 	IsAsk      bool        `json:"IsAsk"`
