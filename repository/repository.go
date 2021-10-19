@@ -7,8 +7,6 @@ import (
 	"os"
 )
 
-type Weekday string
-
 var WeekdayString = [7]string{
 	"Sunday",
 	"Monday",
@@ -23,7 +21,7 @@ var WeekdayString = [7]string{
 type Meet struct {
 	Id 		int		`json:"Id"`
 	Name    string	`json:"Name"`
-	Weekday Weekday	`json:"Weekday"`
+	Weekday string	`json:"Weekday"`
 	Date 	string	`json:"Date"`
 	Start   string	`json:"Start"`
 	End     string	`json:"End"`
@@ -36,6 +34,10 @@ type Config struct {
 	IsAsk		bool		`json:"IsAsk"`
 }
 
+func NewMeet() Meet {
+	return Meet{}
+}
+
 func NewConfig() Config {
 	return Config{
 		Meets: make([]Meet, 0),
@@ -43,6 +45,10 @@ func NewConfig() Config {
 		TimeMargin: 20,
 		IsAsk: false,
 	}
+}
+
+func (meet *Meet) IsNotEmpty() bool {
+	return len(meet.Name) > 0
 }
 
 // 同ディレクトリにファイルの存在を確認する関数
