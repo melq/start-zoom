@@ -87,10 +87,6 @@ func startMeet(config repository.Config) {
 	_, month, day := now.Date()
 	todayStr := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 
-	proc := func () {
-
-	}
-
 	for _, meet := range config.Meets {
 		if meet.Date == todayStr {
 			if checkTime(meet, config.TimeMargin) {
@@ -136,43 +132,60 @@ func startMeet(config repository.Config) {
 	}
 }
 
+func inputName() string {
+	fmt.Print("\n授業名を入力:")
+	return read()
+}
+
+func inputWeekday() (string, string) {
+	fmt.Println("\nZoomが開催される曜日を指定。毎週開催されるものでなくある日程のみの会議の場合は、日付のみの指定も可能です")
+	n := InputNum("曜日(または日付指定)を選択: 0: 日付で指定する, 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday")
+	var weekday string; var date string
+	switch n {
+	case 0:
+		tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
+		date = strconv.Itoa(tmp / 100) + "-" + strconv.Itoa(tmp % 100)
+	case 1, 2, 3, 4, 5, 6, 7:
+		weekday = repository.WeekdayString[n - 1]
+	default: weekday, date = inputWeekday()
+	}
+	return weekday, date
+}
+
+func inputStartTime() string {
+	fmt.Println()
+	tmp := InputNum("開始時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
+
+	startTime := strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { startTime += "0" }
+	return startTime
+}
+
+func inputEndTime() string {
+	fmt.Println()
+	tmp := InputNum("終了時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
+
+	endTime := strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
+	if tmp % 100 == 0 { endTime += "0" }
+	return endTime
+}
+
+func inputUrl() string {
+	fmt.Println("\n会議のURLを入力")
+	return read()
+}
+
 func makeMeet(config repository.Config, filename string) {
 	fmt.Println("新しく会議を登録します")
 	config.SumId++
 	meet := repository.NewMeet()
 
 	meet.Id = config.SumId
-
-	fmt.Print("\n授業名を入力:")
-	meet.Name = read()
-
-	fmt.Println("\nZoomが開催される曜日を指定。毎週開催されるものでなくある日程のみの会議の場合は、日付のみの指定も可能です")
-	Weekday: for {
-		n := InputNum("曜日(または日付指定)を選択: 0: 日付で指定する, 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday")
-		switch n {
-		case 0:
-			tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
-			meet.Date = strconv.Itoa(tmp / 100) + "-" + strconv.Itoa(tmp % 100)
-			break Weekday
-		case 1, 2, 3, 4, 5, 6, 7:
-			meet.Weekday = repository.WeekdayString[n - 1]
-			break Weekday
-		default:
-		}
-	}
-
-	fmt.Println()
-	tmp := InputNum("開始時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
-	meet.Start = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
-	if tmp % 100 == 0 { meet.Start += "0" }
-
-	fmt.Println()
-	tmp = InputNum("終了時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
-	meet.End = strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
-	if tmp % 100 == 0 { meet.End += "0" }
-
-	fmt.Println("\n会議のURLを入力")
-	meet.Url = read()
+	meet.Name = inputName()
+	meet.Weekday, meet.Date = inputWeekday()
+	meet.Start = inputStartTime()
+	meet.End = inputEndTime()
+	meet.Url = inputUrl()
 
 	config.Meets = append(config.Meets, meet)
 	repository.SaveConfig(config, filename)
@@ -208,6 +221,56 @@ func showMeets(config repository.Config) {
 	}
 }
 
+func editMeet(config repository.Config, filename string) {
+	fmt.Println("登録会議の編集をします")
+	showMeets(config)
+	fmt.Println()
+
+	meetNum := InputNum("編集を行う会議の番号を入力してください(編集せず戻る場合「0」)")
+	if meetNum == 0 {
+		fmt.Println("戻ります")
+		return
+	}
+	meetNum--
+	if meetNum >= len(config.Meets) || meetNum < 0 {
+		fmt.Println("番号が不正です")
+		return
+	} else {
+		tmpMeet := config.Meets[meetNum]
+		switch InputNum(tmpMeet.Name + "の何を編集しますか？\n" +
+			"0: 戻る, 1: 名前, 2: 曜日または日付, 3: 開始時刻, 4: 終了時刻, 5: URL") {
+		case 1: tmpMeet.Name = inputName()
+		case 2: tmpMeet.Weekday, tmpMeet.Date = inputWeekday()
+		case 3: tmpMeet.Start = inputStartTime()
+		case 4: tmpMeet.End = inputEndTime()
+		case 5: tmpMeet.Url = inputUrl()
+		default:
+			fmt.Println("戻ります")
+			return
+		}
+		config.Meets[meetNum] = tmpMeet
+
+		repository.SaveConfig(config, filename)
+		fmt.Println(config.Meets[meetNum].Name, "に編集しました")
+	}
+}
+
+func deleteMeet(config repository.Config) {
+}
+
+func editOrDeleteMeet(config repository.Config) {
+	fmt.Println("\n登録会議の編集・削除を行います")
+	if len(config.Meets) == 0 {
+		fmt.Println("登録会議なし")
+		return
+	}
+	switch InputNum("0: 戻る, 1: 編集, 2: 削除") {
+	case 1: editMeet(config)
+	case 2: deleteMeet(config)
+	default: return
+	}
+}
+
 func StartZoomMain(opts Options) {
 	filename := "config.json"
 	config := repository.LoadConfig(filename)
@@ -237,8 +300,7 @@ func StartZoomMain(opts Options) {
 		case 3:
 			showMeets(config)
 		case 4:
-			config.Classes = editDeleteClasses(config.Classes)
-			saveConfig(config, filename)
+			editMeet(config, filename)
 		case 5:
 			anytimeStart(config.Classes)
 		case 6:
