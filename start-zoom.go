@@ -255,18 +255,60 @@ func editMeet(config repository.Config, filename string) {
 	}
 }
 
-func deleteMeet(config repository.Config) {
+func deleteMeet(config repository.Config, filename string) {
+	fmt.Println("登録会議の削除をします")
+	showMeets(config)
+	fmt.Println()
+	meetNum := InputNum("削除したい授業の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
+	if meetNum == 0 {
+		fmt.Println("削除せずに戻ります")
+		return
+	}
+	if meetNum == -1 {
+		fmt.Println("すべての会議データを削除します.よろしいですか？")
+		switch InputNum("1: はい, 2: いいえ") {
+		case 1:
+			config.Meets = []repository.Meet{}
+			fmt.Println("すべてのデータを削除しました")
+		default:
+			fmt.Println("削除せず戻ります")
+		}
+		return
+	} else {
+		meetNum--
+		if meetNum >= len(config.Meets) || meetNum < 0 {
+			fmt.Println("番号が不正です")
+			return
+		} else {
+			fmt.Println(config.Meets[meetNum], "のデータを削除します.よろしいですか？")
+			switch InputNum("1: はい, 2: いいえ") {
+			case 1:
+				fmt.Println(config.Meets[meetNum].Name, "のデータを削除します")
+				var tmpMeets []repository.Meet
+				for i, meet := range config.Meets {
+					if i == meetNum { continue }
+					tmpMeets = append(tmpMeets, meet)
+				}
+				config.Meets = tmpMeets
+				repository.SaveConfig(config, filename)
+				fmt.Println("\n削除しました")
+			default:
+				fmt.Println("削除せず戻ります")
+			}
+			return
+		}
+	}
 }
 
-func editOrDeleteMeet(config repository.Config) {
+func editOrDeleteMeet(config repository.Config, filename string) {
 	fmt.Println("\n登録会議の編集・削除を行います")
 	if len(config.Meets) == 0 {
 		fmt.Println("登録会議なし")
 		return
 	}
 	switch InputNum("0: 戻る, 1: 編集, 2: 削除") {
-	case 1: editMeet(config)
-	case 2: deleteMeet(config)
+	case 1: editMeet(config, filename)
+	case 2: deleteMeet(config, filename)
 	default: return
 	}
 }
@@ -300,7 +342,7 @@ func StartZoomMain(opts Options) {
 		case 3:
 			showMeets(config)
 		case 4:
-			editMeet(config, filename)
+			editOrDeleteMeet(config, filename)
 		case 5:
 			anytimeStart(config.Classes)
 		case 6:
