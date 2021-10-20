@@ -133,7 +133,7 @@ func startMeet(config repository.Config) {
 }
 
 func inputName() string {
-	fmt.Print("\n授業名を入力:")
+	fmt.Print("\n会議名を入力:")
 	return read()
 }
 
@@ -259,7 +259,7 @@ func deleteMeet(config repository.Config, filename string) {
 	fmt.Println("登録会議の削除をします")
 	showMeets(config)
 	fmt.Println()
-	meetNum := InputNum("削除したい授業の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
+	meetNum := InputNum("削除したい会議の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
 	if meetNum == 0 {
 		fmt.Println("削除せずに戻ります")
 		return
@@ -313,12 +313,24 @@ func editOrDeleteMeet(config repository.Config, filename string) {
 	}
 }
 
+func startSpecifiedMeet(config repository.Config) {
+	fmt.Println("指定された会議を開きます")
+	showMeets(config)
+	fmt.Println()
+	meetNum := InputNum("開く会議の番号を入力(戻る場合「0」)")
+	if meetNum == 0 {
+		fmt.Println("戻ります")
+		return
+	}
+	runMeet(config.Meets[meetNum])
+}
+
 func StartZoomMain(opts Options) {
 	filename := "config.json"
 	config := repository.LoadConfig(filename)
 
 	if len(opts.Start) != 0 {
-		startZoom(config)
+		startMeet(config)
 		return
 	}
 
@@ -331,7 +343,7 @@ func StartZoomMain(opts Options) {
 
 	flg := 0
 	for flg == 0 {
-		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 会議開始, 2: 会議登録, 3: 授業リスト, 4: 登録会議の編集・削除, 5: 選択して会議開始, 6: 設定") {
+		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 会議開始, 2: 会議登録, 3: 会議リスト, 4: 登録会議の編集・削除, 5: 選択して会議開始, 6: 設定") {
 		case 0:
 			fmt.Println("終了します")
 			flg = 1
@@ -344,7 +356,7 @@ func StartZoomMain(opts Options) {
 		case 4:
 			editOrDeleteMeet(config, filename)
 		case 5:
-			anytimeStart(config.Classes)
+			startSpecifiedMeet(config)
 		case 6:
 			config = editConfig(config)
 			saveConfig(config, filename)
