@@ -1,4 +1,4 @@
-package main
+package functions
 
 import (
 	"bufio"
@@ -76,14 +76,14 @@ func runMeet(meet repository.Meet) {
 	}
 }
 
-func startMeet(config repository.Config) {
+func StartMeet(config repository.Config) {
 	var currentMeet repository.Meet
 	var nextMeet repository.Meet
 
 	now := time.Now()
 	now.In(time.FixedZone("Asia/Tokyo", 9*60*60))
 
-	fmt.Printf("現在時刻: %02d : %02d", now.Hour(), now.Minute())
+	fmt.Printf("現在時刻: %02d : %02d\n\n", now.Hour(), now.Minute())
 	_, month, day := now.Date()
 	todayStr := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
 
@@ -175,7 +175,7 @@ func inputUrl() string {
 	return read()
 }
 
-func makeMeet(config repository.Config, filename string) {
+func MakeMeet(config *repository.Config, filename string) {
 	fmt.Println("新しく会議を登録します")
 	config.SumId++
 	meet := repository.NewMeet()
@@ -208,9 +208,8 @@ func showMeet(meet repository.Meet) {
 	fmt.Println(" 時刻:", meet.Start, "-", meet.End)
 }
 
-func showMeets(config repository.Config) {
+func ShowMeets(config repository.Config) {
 	fmt.Println("登録されている会議を表示します")
-	fmt.Println()
 	if len(config.Meets) == 0 {
 		fmt.Println("登録会議なし")
 	} else {
@@ -221,9 +220,9 @@ func showMeets(config repository.Config) {
 	}
 }
 
-func editMeet(config repository.Config, filename string) {
+func editMeet(config *repository.Config, filename string) {
 	fmt.Println("登録会議の編集をします")
-	showMeets(config)
+	ShowMeets(*config)
 	fmt.Println()
 
 	meetNum := InputNum("編集を行う会議の番号を入力してください(編集せず戻る場合「0」)")
@@ -255,9 +254,9 @@ func editMeet(config repository.Config, filename string) {
 	}
 }
 
-func deleteMeet(config repository.Config, filename string) {
+func deleteMeet(config *repository.Config, filename string) {
 	fmt.Println("登録会議の削除をします")
-	showMeets(config)
+	ShowMeets(*config)
 	fmt.Println()
 	meetNum := InputNum("削除したい会議の番号を入力してください(すべて削除する場合は「-1」)(削除せず戻る場合は「0」)")
 	if meetNum == 0 {
@@ -300,7 +299,7 @@ func deleteMeet(config repository.Config, filename string) {
 	}
 }
 
-func editOrDeleteMeet(config repository.Config, filename string) {
+func EditOrDeleteMeet(config *repository.Config, filename string) {
 	fmt.Println("\n登録会議の編集・削除を行います")
 	if len(config.Meets) == 0 {
 		fmt.Println("登録会議なし")
@@ -313,9 +312,9 @@ func editOrDeleteMeet(config repository.Config, filename string) {
 	}
 }
 
-func startSpecifiedMeet(config repository.Config) {
+func StartSpecifiedMeet(config repository.Config) {
 	fmt.Println("指定された会議を開きます")
-	showMeets(config)
+	ShowMeets(config)
 	fmt.Println()
 	meetNum := InputNum("開く会議の番号を入力(戻る場合「0」)")
 	if meetNum == 0 {
@@ -325,7 +324,7 @@ func startSpecifiedMeet(config repository.Config) {
 	runMeet(config.Meets[meetNum])
 }
 
-func editSetting(config repository.Config, filename string) {
+func EditSetting(config *repository.Config, filename string) {
 	fmt.Println("設定の変更をします")
 	switch InputNum("0: 戻る, 1: 会議開始前の余裕時間, 2: 該当会議がない場合の質問") {
 	case 0:
@@ -345,43 +344,3 @@ func editSetting(config repository.Config, filename string) {
 	repository.SaveConfig(config, filename)
 	fmt.Println("設定を変更しました")
 }
-
-func StartZoomMain(opts Options) {
-	filename := "config.json"
-	config := repository.LoadConfig(filename)
-
-	if len(opts.Start) != 0 {
-		startMeet(config)
-		return
-	}
-
-	fmt.Println("\n" +
-		"---------------------------------------------\n" +
-		"----------------- StartZoom -----------------\n" +
-		"----------- (made by RikuTsuzuki) -----------\n" +
-		"---------------------------------------------")
-	fmt.Print("\n")
-
-	flg := 0
-	for flg == 0 {
-		switch InputNum("\n行いたい操作の番号を入力してください\n0: 終了, 1: 会議開始, 2: 会議登録, 3: 会議リスト, 4: 登録会議の編集・削除, 5: 選択して会議開始, 6: 設定") {
-		case 0:
-			fmt.Println("終了します")
-			flg = 1
-		case 1:
-			startMeet(config)
-		case 2:
-			makeMeet(config, filename)
-		case 3:
-			showMeets(config)
-		case 4:
-			editOrDeleteMeet(config, filename)
-		case 5:
-			startSpecifiedMeet(config)
-		case 6:
-			editSetting(config, filename)
-		default:
-		}
-	}
-}
-

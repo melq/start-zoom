@@ -78,7 +78,7 @@ func LoadConfig(filename string) Config {
 }
 
 // SaveConfig jsonファイルに書き込む関数
-func SaveConfig(config Config, filename string) {
+func SaveConfig(config *Config, filename string) {
 	configJson, err := json.Marshal(config)
 	if err != nil {
 		log.Fatal(err)
