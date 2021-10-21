@@ -325,6 +325,27 @@ func startSpecifiedMeet(config repository.Config) {
 	runMeet(config.Meets[meetNum])
 }
 
+func editSetting(config repository.Config, filename string) {
+	fmt.Println("設定の変更をします")
+	switch InputNum("0: 戻る, 1: 会議開始前の余裕時間, 2: 該当会議がない場合の質問") {
+	case 0:
+		fmt.Println("戻ります")
+		return
+	case 1:
+		fmt.Println("\n会議開始時刻の何分前から開くようにするか設定します(現在は", config.TimeMargin, "分")
+		config.TimeMargin = InputNum("何分前から起動可能に設定しますか？: ")
+	case 2:
+		fmt.Println("授業開始を選択した際に、開始時刻に該当する会議がなかったときに、同じ日のなかで" +
+			"最も開始時刻の近いものを開くかどうかの質問の有無を設定します")
+		switch InputNum("1: 聞く, 2: 聞かない") {
+		case 1: config.IsAsk = true
+		case 2: config.IsAsk = false
+		}
+	}
+	repository.SaveConfig(config, filename)
+	fmt.Println("設定を変更しました")
+}
+
 func StartZoomMain(opts Options) {
 	filename := "config.json"
 	config := repository.LoadConfig(filename)
@@ -358,8 +379,7 @@ func StartZoomMain(opts Options) {
 		case 5:
 			startSpecifiedMeet(config)
 		case 6:
-			config = editConfig(config)
-			saveConfig(config, filename)
+			editSetting(config, filename)
 		default:
 		}
 	}
