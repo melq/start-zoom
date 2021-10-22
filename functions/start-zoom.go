@@ -175,6 +175,27 @@ func inputUrl() string {
 	return read()
 }
 
+func makeSchtasks(meet repository.Meet) { //schtasks /Create /SC ONCE /TN mymeeting1 /TR "D:\myzoom.bat 9xxxxx xxxxx" /ST 14:00 /SD 2021/07/07
+	repository.MakeBatchIfNotExist()
+
+	//date := strings.Split(meet.Date, "-")
+	//dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
+	//
+	//var id string; var pass string
+	//if len(meet.Url) > 0 {
+	//	id = ""
+	//
+	//	pwdIndex := strings.Index(meet.Url, "pwd=")
+	//	pass = meet.Url[pwdIndex + 3:]
+	//}
+	//
+	//command := "-create -sc once -tn " + meet.Name + " -tr \"D:startzoom.bat " + id + " " + pass + "\" -st " + meet.Start + " -sd " + dateWithYear
+	//err := exec.Command("schtasks", command).Start()
+	//if err != nil {
+	//	log.Fatalln(err)
+	//}
+}
+
 func MakeMeet(config *repository.Config, filename string) {
 	fmt.Println("新しく会議を登録します")
 	config.SumId++
@@ -189,8 +210,16 @@ func MakeMeet(config *repository.Config, filename string) {
 
 	config.Meets = append(config.Meets, meet)
 	repository.SaveConfig(config, filename)
-
 	fmt.Println(meet.Name, "を作成しました")
+
+	if len(meet.Date) > 0 {
+		fmt.Println("この予定をタスクスケジューラに登録しますか？")
+		switch InputNum("1: はい, 2: いいえ") {
+		case 1:
+			makeSchtasks(meet)
+		case 2:
+		}
+	}
 }
 
 func showMeet(meet repository.Meet) {
