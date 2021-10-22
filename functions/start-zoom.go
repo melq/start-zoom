@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"startZoom/repository"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -175,25 +176,29 @@ func inputUrl() string {
 	return read()
 }
 
-func makeSchtasks(meet repository.Meet) { //schtasks /Create /SC ONCE /TN mymeeting1 /TR "D:\myzoom.bat 9xxxxx xxxxx" /ST 14:00 /SD 2021/07/07
+func makeSchtasks(meet repository.Meet) {
 	repository.MakeBatchIfNotExist()
 
-	//date := strings.Split(meet.Date, "-")
-	//dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
-	//
-	//var id string; var pass string
-	//if len(meet.Url) > 0 {
-	//	id = ""
-	//
-	//	pwdIndex := strings.Index(meet.Url, "pwd=")
-	//	pass = meet.Url[pwdIndex + 3:]
-	//}
-	//
-	//command := "-create -sc once -tn " + meet.Name + " -tr \"D:startzoom.bat " + id + " " + pass + "\" -st " + meet.Start + " -sd " + dateWithYear
-	//err := exec.Command("schtasks", command).Start()
-	//if err != nil {
-	//	log.Fatalln(err)
-	//}
+	var id string; var pass string
+	if len(meet.Url) > 0 {
+		idIndex := strings.Index(meet.Url, "j/") + 2
+		qIndex := strings.Index(meet.Url, "?")
+		id = meet.Url[idIndex:qIndex]
+
+		pwdIndex := strings.Index(meet.Url, "pwd=") + 4
+		pass = meet.Url[pwdIndex:]
+	}
+	date := strings.Split(meet.Date, "-")
+	dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
+
+	out, err := exec.Command("settask.bat", meet.Name, id, pass, meet.Start, dateWithYear).Output()
+	fmt.Println(string(out))
+
+	if err != nil {
+		log.Fatalln("schtasks", "error", err)
+	} else {
+		fmt.Println("登録しました")
+	}
 }
 
 func MakeMeet(config *repository.Config, filename string) {
@@ -213,7 +218,7 @@ func MakeMeet(config *repository.Config, filename string) {
 	fmt.Println(meet.Name, "を作成しました")
 
 	if len(meet.Date) > 0 {
-		fmt.Println("この予定をタスクスケジューラに登録しますか？")
+		fmt.Println("\nこの予定をタスクスケジューラに登録しますか？")
 		switch InputNum("1: はい, 2: いいえ") {
 		case 1:
 			makeSchtasks(meet)
@@ -297,6 +302,7 @@ func deleteMeet(config *repository.Config, filename string) {
 		switch InputNum("1: はい, 2: いいえ") {
 		case 1:
 			config.Meets = []repository.Meet{}
+			repository.SaveConfig(config, filename)
 			fmt.Println("すべてのデータを削除しました")
 		default:
 			fmt.Println("削除せず戻ります")
