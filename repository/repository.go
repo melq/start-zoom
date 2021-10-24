@@ -51,6 +51,34 @@ func (meet *Meet) IsNotEmpty() bool {
 	return len(meet.Name) > 0
 }
 
+func MakeBatchIfNotExist() {
+	_, err := os.Stat("D:/startzoom.bat")
+	if err == nil {
+		return
+	}
+
+	var bytes []byte
+	if fileExists("startzoom.bat") {
+		bytes, err = ioutil.ReadFile("startzoom.bat")
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+	fp, err := os.OpenFile("D:/startzoom.bat", os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		if err := fp.Close(); err != nil {
+			log.Fatal(err)
+		}
+	}()
+
+	if _, err = fp.Write(bytes); err != nil {
+		log.Fatal(err)
+	}
+}
+
 // 同ディレクトリにファイルの存在を確認する関数
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)

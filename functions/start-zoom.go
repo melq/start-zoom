@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"startZoom/repository"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -156,8 +157,7 @@ func inputStartTime() string {
 	fmt.Println()
 	tmp := InputNum("開始時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
 
-	startTime := strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
-	if tmp % 100 == 0 { startTime += "0" }
+	startTime := fmt.Sprintf("%02d:%02d", tmp / 100, tmp % 100)
 	return startTime
 }
 
@@ -165,14 +165,37 @@ func inputEndTime() string {
 	fmt.Println()
 	tmp := InputNum("終了時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
 
-	endTime := strconv.Itoa(tmp / 100) + ":" + strconv.Itoa(tmp % 100)
-	if tmp % 100 == 0 { endTime += "0" }
+	endTime := fmt.Sprintf("%02d:%02d", tmp / 100, tmp % 100)
 	return endTime
 }
 
 func inputUrl() string {
 	fmt.Println("\n会議のURLを入力")
 	return read()
+}
+
+func makeSchtasks(meet repository.Meet) {
+	repository.MakeBatchIfNotExist()
+
+	var id string; var pass string
+	if len(meet.Url) > 0 {
+		idIndex := strings.Index(meet.Url, "j/") + 2
+		qIndex := strings.Index(meet.Url, "?")
+		id = meet.Url[idIndex:qIndex]
+
+		pwdIndex := strings.Index(meet.Url, "pwd=") + 4
+		pass = meet.Url[pwdIndex:]
+	}
+	date := strings.Split(meet.Date, "-")
+	dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
+
+	_, err := exec.Command("settask.bat", meet.Name, id, pass, meet.Start, dateWithYear).Output()
+
+	if err != nil {
+		log.Fatalln("schtasks", "error", err)
+	} else {
+		fmt.Println("登録しました")
+	}
 }
 
 func MakeMeet(config *repository.Config, filename string) {
@@ -189,8 +212,16 @@ func MakeMeet(config *repository.Config, filename string) {
 
 	config.Meets = append(config.Meets, meet)
 	repository.SaveConfig(config, filename)
-
 	fmt.Println(meet.Name, "を作成しました")
+
+	if len(meet.Date) > 0 {
+		fmt.Println("\nこの予定をタスクスケジューラに登録しますか？(Zoomの場合のみ)")
+		switch InputNum("1: はい, 2: いいえ") {
+		case 1:
+			makeSchtasks(meet)
+		case 2:
+		}
+	}
 }
 
 func showMeet(meet repository.Meet) {
@@ -268,6 +299,7 @@ func deleteMeet(config *repository.Config, filename string) {
 		switch InputNum("1: はい, 2: いいえ") {
 		case 1:
 			config.Meets = []repository.Meet{}
+			repository.SaveConfig(config, filename)
 			fmt.Println("すべてのデータを削除しました")
 		default:
 			fmt.Println("削除せず戻ります")
