@@ -26,6 +26,8 @@ type Meet struct {
 	Start   string	`json:"Start"`
 	End     string	`json:"End"`
 	Url     string	`json:"Url"`
+	ZoomId	string	`json:"ZoomId"`
+	Pass	string	`json:"Pass"`
 }
 type Config struct {
 	Meets 		[]Meet 		`json:"Meets"`

@@ -169,9 +169,19 @@ func inputEndTime() string {
 	return endTime
 }
 
-func inputUrl() string {
-	fmt.Println("\n会議のURLを入力")
-	return read()
+func inputUrlOrId() (string, string, string) {
+	fmt.Println("\n会議のURLまたはIDとパスワードを入力")
+	url := ""; id := ""; pass := ""
+	switch InputNum("1: URLで登録, 2: IDとパスワードで登録") {
+	case 1:
+		url = read()
+	case 2:
+		fmt.Println("IDを入力してください")
+		id = read()
+		fmt.Println("パスワードを入力してください")
+		pass = read()
+	}
+	return url, id, pass
 }
 
 func makeSchtasks(meet repository.Meet) {
@@ -208,7 +218,7 @@ func MakeMeet(config *repository.Config, filename string) {
 	meet.Weekday, meet.Date = inputWeekday()
 	meet.Start = inputStartTime()
 	meet.End = inputEndTime()
-	meet.Url = inputUrl()
+	meet.Url, meet.ZoomId, meet.Pass = inputUrlOrId()
 
 	config.Meets = append(config.Meets, meet)
 	repository.SaveConfig(config, filename)
@@ -268,12 +278,12 @@ func editMeet(config *repository.Config, filename string) {
 	} else {
 		tmpMeet := config.Meets[meetNum]
 		switch InputNum(tmpMeet.Name + "の何を編集しますか？\n" +
-			"0: 戻る, 1: 名前, 2: 曜日または日付, 3: 開始時刻, 4: 終了時刻, 5: URL") {
+			"0: 戻る, 1: 名前, 2: 曜日または日付, 3: 開始時刻, 4: 終了時刻, 5: URLまたはZoomIDとパスワード") {
 		case 1: tmpMeet.Name = inputName()
 		case 2: tmpMeet.Weekday, tmpMeet.Date = inputWeekday()
 		case 3: tmpMeet.Start = inputStartTime()
 		case 4: tmpMeet.End = inputEndTime()
-		case 5: tmpMeet.Url = inputUrl()
+		case 5: tmpMeet.Url, tmpMeet.ZoomId, tmpMeet.Pass = inputUrlOrId()
 		default:
 			fmt.Println("戻ります")
 			return
@@ -311,7 +321,7 @@ func deleteMeet(config *repository.Config, filename string) {
 			fmt.Println("番号が不正です")
 			return
 		} else {
-			fmt.Println(config.Meets[meetNum], "のデータを削除します.よろしいですか？")
+			fmt.Println(config.Meets[meetNum].Name, "のデータを削除します.よろしいですか？")
 			switch InputNum("1: はい, 2: いいえ") {
 			case 1:
 				fmt.Println(config.Meets[meetNum].Name, "のデータを削除します")
