@@ -195,6 +195,9 @@ func makeSchtasks(meet repository.Meet) {
 
 		pwdIndex := strings.Index(meet.Url, "pwd=") + 4
 		pass = meet.Url[pwdIndex:]
+	} else {
+		id = meet.ZoomId
+		pass = meet.Pass
 	}
 	date := strings.Split(meet.Date, "-")
 	dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
