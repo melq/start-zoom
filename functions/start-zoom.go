@@ -70,8 +70,14 @@ func getEarlierMeet(meet1 repository.Meet, meet2 repository.Meet) repository.Mee
 }
 
 func runMeet(meet repository.Meet) {
-	fmt.Println(meet.Name, "のURLを開きます")
-	err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", meet.Url).Start()
+	fmt.Println(meet.Name, "の会議を開きます")
+	url := ""
+	if len(meet.Url) > 0 {
+		url = meet.Url
+	} else {
+		url = "https://us02web.zoom.us/j/" + meet.ZoomId + "?pwd=" + meet.Pass
+	}
+	err := exec.Command("rundll32.exe", "url.dll,FileProtocolHandler", url).Start()
 	if err != nil {
 		log.Fatalln(err)
 	}
