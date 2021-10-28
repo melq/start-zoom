@@ -245,15 +245,15 @@ func MakeMeet(config *repository.Config, filename string) {
 
 func showMeet(meet repository.Meet) {
 	fmt.Println(meet.Name)
-	fmt.Println(" URL:", meet.Url)
+	if len(meet.Url) > 0 {
+		fmt.Println(" URL:", meet.Url)
+	} else {
+		fmt.Println(" ID:", meet.ZoomId, "Pass:", meet.Pass)
+	}
 	if len(meet.Weekday) > 0 {
 		fmt.Println(" 曜日:", meet.Weekday)
 	} else {
-		meetDate, err := time.Parse("01-02", meet.Date)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		fmt.Println(" 日時:", meetDate)
+		fmt.Println(" 日時:", meet.Date)
 	}
 	fmt.Println(" 時刻:", meet.Start, "-", meet.End)
 }
