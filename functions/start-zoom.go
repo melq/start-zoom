@@ -205,10 +205,13 @@ func makeSchtasks(meet repository.Meet) {
 		id = meet.ZoomId
 		pass = meet.Pass
 	}
+	stime, _ := time.Parse("15:04", meet.Start)
+	stime = stime.Add(time.Duration(-5) * time.Minute)
+	stimeStr := strconv.Itoa(stime.Hour()) + ":" + strconv.Itoa(stime.Minute())
 	date := strings.Split(meet.Date, "-")
 	dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
 
-	_, err := exec.Command("settask.bat", meet.Name, id, pass, meet.Start, dateWithYear).Output()
+	_, err := exec.Command("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear).Output()
 
 	if err != nil {
 		log.Fatalln("schtasks", "error", err)
@@ -248,7 +251,7 @@ func showMeet(meet repository.Meet) {
 	if len(meet.Url) > 0 {
 		fmt.Println(" URL:", meet.Url)
 	} else {
-		fmt.Println(" ID:", meet.ZoomId, "Pass:", meet.Pass)
+		fmt.Println(" ID:", meet.ZoomId, ",", "Pass:", meet.Pass)
 	}
 	if len(meet.Weekday) > 0 {
 		fmt.Println(" 曜日:", meet.Weekday)
