@@ -17,7 +17,7 @@ var WeekdayString = [7]string{
 	"Saturday",
 }
 
-/*授業の情報を格納する構造体*/
+// Meet 授業の情報を格納する構造体
 type Meet struct {
 	Id 		int		`json:"Id"`
 	Name    string	`json:"Name"`

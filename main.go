@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	"os"
-	"startZoom/functions"
-	"startZoom/repository"
+	"start-zoom/functions"
+	"start-zoom/repository"
 )
 
 type Options struct {

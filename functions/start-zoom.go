@@ -6,7 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
-	"startZoom/repository"
+	"start-zoom/repository"
 	"strconv"
 	"strings"
 	"time"
