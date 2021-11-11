@@ -207,10 +207,11 @@ func makeSchtasks(meet repository.Meet) {
 	}
 	stime, _ := time.Parse("15:04", meet.Start)
 	stime = stime.Add(time.Duration(-5) * time.Minute)
-	stimeStr := strconv.Itoa(stime.Hour()) + ":" + strconv.Itoa(stime.Minute())
+	stimeStr := fmt.Sprintf("%02d:%02d", stime.Hour(), stime.Minute())
 	date := strings.Split(meet.Date, "-")
 	dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
 
+	fmt.Println("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear)
 	_, err := exec.Command("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear).Output()
 
 	if err != nil {
