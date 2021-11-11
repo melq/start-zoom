@@ -257,7 +257,16 @@ func showMeet(meet repository.Meet) {
 	if len(meet.Weekday) > 0 {
 		fmt.Println(" 曜日:", meet.Weekday)
 	} else {
-		fmt.Println(" 日時:", meet.Date)
+		now := time.Now()
+		date, err := time.Parse("2006-1-2", strconv.Itoa(now.Year()) + "-" + meet.Date)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		if now.After(date) {
+			date = date.AddDate(1, 0, 0)
+		}
+		day, month, year := date.Date()
+		fmt.Println(" 日時:", fmt.Sprintf("%04d-%02d-%02d", day, month, year))
 	}
 	fmt.Println(" 時刻:", meet.Start, "-", meet.End)
 }
