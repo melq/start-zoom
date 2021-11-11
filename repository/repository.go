@@ -54,19 +54,19 @@ func (meet *Meet) IsNotEmpty() bool {
 }
 
 func MakeBatchIfNotExist() {
-	_, err := os.Stat("D:/startzoom.bat")
+	_, err := os.Stat("D:/myzoom.bat")
 	if err == nil {
 		return
 	}
 
 	var bytes []byte
-	if fileExists("startzoom.bat") {
-		bytes, err = ioutil.ReadFile("startzoom.bat")
+	if fileExists("myzoom.bat") {
+		bytes, err = ioutil.ReadFile("myzoom.bat")
 		if err != nil {
 			log.Fatalln(err)
 		}
 	}
-	fp, err := os.OpenFile("D:/startzoom.bat", os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0666)
+	fp, err := os.OpenFile("D:/myzoom.bat", os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
 	}
