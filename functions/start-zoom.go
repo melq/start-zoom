@@ -180,6 +180,7 @@ func inputUrlOrId() (string, string, string) {
 	url := ""; id := ""; pass := ""
 	switch InputNum("1: URLで登録, 2: IDとパスワードで登録") {
 	case 1:
+		fmt.Println("URLを入力してください")
 		url = read()
 	case 2:
 		fmt.Println("IDを入力してください")
@@ -191,7 +192,7 @@ func inputUrlOrId() (string, string, string) {
 }
 
 func makeSchtasks(meet repository.Meet) {
-	repository.MakeBatchIfNotExist()
+	// repository.MakeBatchIfNotExist() // D:直下にバッチを作成する機能を廃止
 
 	var id string; var pass string
 	if len(meet.Url) > 0 {
@@ -211,7 +212,6 @@ func makeSchtasks(meet repository.Meet) {
 	date := strings.Split(meet.Date, "-")
 	dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
 
-	fmt.Println("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear)
 	_, err := exec.Command("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear).Output()
 
 	if err != nil {
