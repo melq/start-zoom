@@ -36,7 +36,7 @@ func checkTime(meet repository.Meet, timeMargin int) bool {
 	now := time.Now()
 	now.In(time.FixedZone("Asia/Tokyo", 9*60*60))
 
-	nowTime, _ := time.Parse("15:4", strconv.Itoa(now.Hour()) + ":" + strconv.Itoa(now.Minute()))
+	nowTime, _ := time.Parse("15:4", fmt.Sprintf("%d:%d", now.Hour(), now.Minute()))
 	startTime, _ := time.Parse("15:04", meet.Start)
 	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
 	endTime, _ := time.Parse("15:04", meet.End)
@@ -51,7 +51,7 @@ func getEarlierMeet(meet1 repository.Meet, meet2 repository.Meet) repository.Mee
 	now := time.Now()
 	now.In(time.FixedZone("Asia/Tokyo", 9*60*60))
 
-	nowTime, _ := time.Parse("15:4", strconv.Itoa(now.Hour()) + ":" + strconv.Itoa(now.Minute()))
+	nowTime, _ := time.Parse("15:4", fmt.Sprintf("%d:%d", now.Hour(), now.Minute()))
 	time1, _ := time.Parse("15:04", meet1.Start)
 	time2, _ := time.Parse("15:04", meet2.Start)
 
@@ -91,15 +91,15 @@ func StartMeet(config repository.Config) {
 	now.In(time.FixedZone("Asia/Tokyo", 9*60*60))
 
 	fmt.Printf("現在時刻: %02d : %02d\n\n", now.Hour(), now.Minute())
-	_, month, day := now.Date()
-	todayStr := strconv.Itoa(int(month)) + "-" + strconv.Itoa(day)
+	_, month, date := now.Date()
+	todayStr := fmt.Sprintf("%02d-%02d", month, date)
 
 	for _, meet := range config.Meets {
 		if meet.Date == todayStr {
 			if checkTime(meet, config.TimeMargin) {
 				currentMeet = meet
 			}
-			if nextMeet.Name != "" {
+			if nextMeet.IsNotEmpty() {
 				nextMeet = getEarlierMeet(nextMeet, meet)
 			} else {
 				nextMeet = meet
@@ -111,7 +111,7 @@ func StartMeet(config repository.Config) {
 			if checkTime(meet, config.TimeMargin) {
 				currentMeet = meet
 			}
-			if nextMeet.Name != "" {
+			if nextMeet.IsNotEmpty() {
 				nextMeet = getEarlierMeet(nextMeet, meet)
 			} else {
 				nextMeet = meet
@@ -139,7 +139,7 @@ func StartMeet(config repository.Config) {
 	}
 }
 
-func inputName(meets []repository.Meet /*mode == 0: 作成, 1: 編集*/) string {
+func inputName(meets []repository.Meet) string {
 	var name string
 	flg := 0
 	for flg == 0 {
@@ -166,7 +166,7 @@ func inputWeekday() (string, string) {
 	switch n {
 	case 0:
 		tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
-		date = strconv.Itoa(tmp / 100) + "-" + strconv.Itoa(tmp % 100)
+		date = fmt.Sprintf("%02d-%02d", tmp / 100, tmp % 100)
 	case 1, 2, 3, 4, 5, 6, 7:
 		weekday = repository.WeekdayString[n - 1]
 	default: weekday, date = inputWeekday()
@@ -208,10 +208,11 @@ func inputUrlOrId() (string, string, string) {
 
 func adjustYear(dateStr string) time.Time {
 	now := time.Now()
-	date, err := time.Parse("2006-1-2", strconv.Itoa(now.Year()) + "-" + dateStr)
+	date, err := time.Parse("2006-01-02", strconv.Itoa(now.Year()) + "-" + dateStr)
 	if err != nil {
 		log.Fatalln(err)
 	}
+	now = now.AddDate(0, 0, -1)
 	if now.After(date) {
 		date = date.AddDate(1, 0, 0)
 	}
@@ -240,7 +241,7 @@ func makeSchtasks(meet repository.Meet) {
 	year, month, date := dates.Date()
 	dateWithYear := fmt.Sprintf("%04d/%02d/%02d", year, month, date)
 
-	fmt.Println("./settask.bat", meet.Name, id, pass, stimeStr, dateWithYear)
+	//fmt.Println("./settask.bat", meet.Name, id, pass, stimeStr, dateWithYear)
 	_, err := exec.Command("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear).Output()
 
 	if err != nil {
@@ -288,7 +289,7 @@ func showMeet(meet repository.Meet) {
 	} else {
 		dates := adjustYear(meet.Date)
 		year, month, date := dates.Date()
-		fmt.Println(" 日時:", fmt.Sprintf("%04d-%02d-%02d", date, month, year))
+		fmt.Println(" 日時:", fmt.Sprintf("%04d-%02d-%02d", year, month, date))
 	}
 	fmt.Println(" 時刻:", meet.Start, "-", meet.End)
 }
