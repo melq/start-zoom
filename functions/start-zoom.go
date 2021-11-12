@@ -230,7 +230,7 @@ func makeSchtasks(meet repository.Meet) {
 	_, err := exec.Command("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear).Output()
 
 	if err != nil {
-		log.Fatalln("schtasks", "error", err)
+		log.Fatalln("settask", err)
 	} else {
 		fmt.Println("登録しました")
 	}
@@ -332,6 +332,16 @@ func editMeet(config *repository.Config, filename string) {
 	}
 }
 
+func deleteSchtasks(name string) {
+	_, err := exec.Command("deletetask.bat", name).Output()
+
+	if err != nil {
+		//log.Fatalln("deletetask", err)
+	} else {
+		fmt.Println("タスクスケジューラから削除しました")
+	}
+}
+
 func deleteMeet(config *repository.Config, filename string) {
 	fmt.Println("登録会議の削除をします")
 	ShowMeets(*config)
@@ -367,6 +377,7 @@ func deleteMeet(config *repository.Config, filename string) {
 					if i == meetNum { continue }
 					tmpMeets = append(tmpMeets, meet)
 				}
+				deleteSchtasks(config.Meets[meetNum].Name)
 				config.Meets = tmpMeets
 				repository.SaveConfig(config, filename)
 				fmt.Println("\n削除しました")
