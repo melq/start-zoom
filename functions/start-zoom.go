@@ -206,6 +206,18 @@ func inputUrlOrId() (string, string, string) {
 	return url, id, pass
 }
 
+func adjustYear(dateStr string) time.Time {
+	now := time.Now()
+	date, err := time.Parse("2006-1-2", strconv.Itoa(now.Year()) + "-" + dateStr)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if now.After(date) {
+		date = date.AddDate(1, 0, 0)
+	}
+	return date
+}
+
 func makeSchtasks(meet repository.Meet) {
 	// repository.MakeBatchIfNotExist() // D:直下にバッチを作成する機能を廃止
 
@@ -338,7 +350,7 @@ func deleteSchtasks(name string) {
 	if err != nil {
 		//log.Fatalln("deletetask", err)
 	} else {
-		fmt.Println("タスクスケジューラから削除しました")
+		fmt.Println(name, "をタスクスケジューラから削除しました")
 	}
 }
 
@@ -355,6 +367,9 @@ func deleteMeet(config *repository.Config, filename string) {
 		fmt.Println("すべての会議データを削除します.よろしいですか？")
 		switch InputNum("1: はい, 2: いいえ") {
 		case 1:
+			for _, meet := range config.Meets {
+				deleteSchtasks(meet.Name)
+			}
 			config.Meets = []repository.Meet{}
 			repository.SaveConfig(config, filename)
 			fmt.Println("すべてのデータを削除しました")
