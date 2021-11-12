@@ -95,8 +95,7 @@ func StartMeet(config repository.Config) {
 		if meet.Date == todayStr {
 			if checkTime(meet, config.TimeMargin) {
 				currentMeet = meet
-			}
-			if nextMeet.IsNotEmpty() {
+			} else if nextMeet.IsNotEmpty() {
 				nextMeet = getEarlierMeet(nextMeet, meet)
 			} else {
 				nextMeet = meet
@@ -107,8 +106,7 @@ func StartMeet(config repository.Config) {
 		if meet.Weekday == now.Weekday().String() {
 			if checkTime(meet, config.TimeMargin) {
 				currentMeet = meet
-			}
-			if nextMeet.IsNotEmpty() {
+			} else if nextMeet.IsNotEmpty() {
 				nextMeet = getEarlierMeet(nextMeet, meet)
 			} else {
 				nextMeet = meet
