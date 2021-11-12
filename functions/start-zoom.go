@@ -236,9 +236,11 @@ func makeSchtasks(meet repository.Meet) {
 	stime, _ := time.Parse("15:04", meet.Start)
 	stime = stime.Add(time.Duration(-5) * time.Minute)
 	stimeStr := fmt.Sprintf("%02d:%02d", stime.Hour(), stime.Minute())
-	date := strings.Split(meet.Date, "-")
-	dateWithYear := strconv.Itoa(time.Now().Year()) + "/" + date[0] + "/" + date[1]
+	dates := adjustYear(meet.Date)
+	year, month, date := dates.Date()
+	dateWithYear := fmt.Sprintf("%04d/%02d/%02d", year, month, date)
 
+	fmt.Println("./settask.bat", meet.Name, id, pass, stimeStr, dateWithYear)
 	_, err := exec.Command("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear).Output()
 
 	if err != nil {
@@ -284,16 +286,9 @@ func showMeet(meet repository.Meet) {
 	if len(meet.Weekday) > 0 {
 		fmt.Println(" 曜日:", meet.Weekday)
 	} else {
-		now := time.Now()
-		date, err := time.Parse("2006-1-2", strconv.Itoa(now.Year()) + "-" + meet.Date)
-		if err != nil {
-			log.Fatalln(err)
-		}
-		if now.After(date) {
-			date = date.AddDate(1, 0, 0)
-		}
-		day, month, year := date.Date()
-		fmt.Println(" 日時:", fmt.Sprintf("%04d-%02d-%02d", day, month, year))
+		dates := adjustYear(meet.Date)
+		year, month, date := dates.Date()
+		fmt.Println(" 日時:", fmt.Sprintf("%04d-%02d-%02d", date, month, year))
 	}
 	fmt.Println(" 時刻:", meet.Start, "-", meet.End)
 }
