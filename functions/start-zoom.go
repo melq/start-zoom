@@ -34,7 +34,6 @@ func InputNum (msg string) int {
 
 func checkTime(meet repository.Meet, timeMargin int) bool {
 	now := time.Now()
-	now.In(time.FixedZone("Asia/Tokyo", 9*60*60))
 
 	nowTime, _ := time.Parse("15:4", fmt.Sprintf("%d:%d", now.Hour(), now.Minute()))
 	startTime, _ := time.Parse("15:04", meet.Start)
@@ -49,7 +48,6 @@ func checkTime(meet repository.Meet, timeMargin int) bool {
 
 func getEarlierMeet(meet1 repository.Meet, meet2 repository.Meet) repository.Meet {
 	now := time.Now()
-	now.In(time.FixedZone("Asia/Tokyo", 9*60*60))
 
 	nowTime, _ := time.Parse("15:4", fmt.Sprintf("%d:%d", now.Hour(), now.Minute()))
 	time1, _ := time.Parse("15:04", meet1.Start)
@@ -88,7 +86,6 @@ func StartMeet(config repository.Config) {
 	var nextMeet repository.Meet
 
 	now := time.Now()
-	now.In(time.FixedZone("Asia/Tokyo", 9*60*60))
 
 	fmt.Printf("現在時刻: %02d : %02d\n\n", now.Hour(), now.Minute())
 	_, month, date := now.Date()
