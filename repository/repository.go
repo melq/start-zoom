@@ -63,34 +63,6 @@ func GetSameNames(meets []Meet, name string) []int {
 	return ids
 }
 
-/*func MakeBatchIfNotExist() {  // D:直下にバッチを作成する機能を廃止
-	_, err := os.Stat("D:/myzoom.bat")
-	if err == nil {
-		return
-	}
-
-	var bytes []byte
-	if fileExists("myzoom.bat") {
-		bytes, err = ioutil.ReadFile("myzoom.bat")
-		if err != nil {
-			log.Fatalln(err)
-		}
-	}
-	fp, err := os.OpenFile("D:/myzoom.bat", os.O_TRUNC | os.O_WRONLY | os.O_CREATE, 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer func() {
-		if err := fp.Close(); err != nil {
-			log.Fatal(err)
-		}
-	}()
-
-	if _, err = fp.Write(bytes); err != nil {
-		log.Fatal(err)
-	}
-}*/
-
 // 同ディレクトリにファイルの存在を確認する関数
 func fileExists(filename string) bool {
 	_, err := os.Stat(filename)
@@ -105,7 +77,7 @@ func LoadConfig(filename string) Config {
 			log.Fatal(err)
 		}
 	}
-	bytes, err := ioutil.ReadFile(filename)	//json読み込み
+	bytes, err := ioutil.ReadFile(filename)	// json読み込み
 	if err != nil {
 		log.Fatal(err)
 	}

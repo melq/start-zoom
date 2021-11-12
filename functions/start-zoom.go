@@ -215,7 +215,6 @@ func adjustYear(dateStr string) time.Time {
 }
 
 func makeSchtasks(meet repository.Meet) {
-	// repository.MakeBatchIfNotExist() // D:直下にバッチを作成する機能を廃止
 
 	var id string; var pass string
 	if len(meet.Url) > 0 {
@@ -338,9 +337,7 @@ func editMeet(config *repository.Config, filename string) {
 func deleteSchtasks(name string) {
 	_, err := exec.Command("deletetask.bat", name).Output()
 
-	if err != nil {
-		//log.Fatalln("deletetask", err)
-	} else {
+	if err == nil { // errは削除対象が存在しないときのエラーである前提の処理
 		fmt.Println(name, "をタスクスケジューラから削除しました")
 	}
 }
