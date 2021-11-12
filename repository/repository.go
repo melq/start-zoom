@@ -53,6 +53,16 @@ func (meet *Meet) IsNotEmpty() bool {
 	return len(meet.Name) > 0
 }
 
+func GetSameNames(meets []Meet, name string) []int {
+	var ids []int
+	for i, meet := range meets {
+		if meet.Name == name {
+			ids = append(ids, i)
+		}
+	}
+	return ids
+}
+
 /*func MakeBatchIfNotExist() {  // D:直下にバッチを作成する機能を廃止
 	_, err := os.Stat("D:/myzoom.bat")
 	if err == nil {

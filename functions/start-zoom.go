@@ -139,9 +139,30 @@ func StartMeet(config repository.Config) {
 	}
 }
 
-func inputName() string {
-	fmt.Print("\n会議名を入力:")
-	return read()
+func inputName(mode int, meets []repository.Meet /*mode == 0: 作成, 1: 編集*/) string {
+	var name string
+	flg := 0
+	for flg == 0 {
+		fmt.Print("\n会議名を入力:")
+		name = read()
+
+		ids := repository.GetSameNames(meets, name)
+		if len(ids) > 0 && mode == 0 {
+			fmt.Println("以下の同名の会議があります。同名の会議は登録できません")
+			for _, i := range ids {
+				fmt.Println()
+				showMeet(meets[i])
+			}
+		} else if len(ids) > 1 && mode == 1 {
+			fmt.Println("以下の同名の会議があります。同名の会議は登録できません")
+			for _, i := range ids {
+				fmt.Println()
+				showMeet(meets[i])
+			}
+		} else { flg = 1 }
+		fmt.Println()
+	}
+	return name
 }
 
 func inputWeekday() (string, string) {
@@ -227,7 +248,7 @@ func MakeMeet(config *repository.Config, filename string) {
 	meet := repository.NewMeet()
 
 	meet.Id = config.SumId
-	meet.Name = inputName()
+	meet.Name = inputName(0, config.Meets)
 	meet.Weekday, meet.Date = inputWeekday()
 	meet.Start = inputStartTime()
 	meet.End = inputEndTime()
@@ -301,7 +322,7 @@ func editMeet(config *repository.Config, filename string) {
 		tmpMeet := config.Meets[meetNum]
 		switch InputNum(tmpMeet.Name + "の何を編集しますか？\n" +
 			"0: 戻る, 1: 名前, 2: 曜日または日付, 3: 開始時刻, 4: 終了時刻, 5: URLまたはZoomIDとパスワード") {
-		case 1: tmpMeet.Name = inputName()
+		case 1: tmpMeet.Name = inputName(1, config.Meets)
 		case 2: tmpMeet.Weekday, tmpMeet.Date = inputWeekday()
 		case 3: tmpMeet.Start = inputStartTime()
 		case 4: tmpMeet.End = inputEndTime()
