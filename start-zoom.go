@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"start-zoom/common"
 	"start-zoom/repository"
 	"strconv"
 	"strings"
@@ -20,7 +21,7 @@ func read() string {
 	return sc.Text()
 }
 
-// InputNum /*数値入力用関数*/
+// InputNum 数値入力用関数
 func InputNum(msg string) int {
 	for {
 		fmt.Println(msg)
@@ -32,7 +33,7 @@ func InputNum(msg string) int {
 	}
 }
 
-func checkTime(meet repository.Meet, timeMargin int) bool {
+func checkTime(meet common.Meet, timeMargin int) bool {
 	now := time.Now()
 
 	nowTime, _ := time.Parse("15:4", fmt.Sprintf("%d:%d", now.Hour(), now.Minute()))
@@ -46,7 +47,7 @@ func checkTime(meet repository.Meet, timeMargin int) bool {
 	return false
 }
 
-func getEarlierMeet(meet1 repository.Meet, meet2 repository.Meet) repository.Meet {
+func getEarlierMeet(meet1 common.Meet, meet2 common.Meet) common.Meet {
 	now := time.Now()
 
 	nowTime, _ := time.Parse("15:4", fmt.Sprintf("%d:%d", now.Hour(), now.Minute()))
@@ -54,7 +55,7 @@ func getEarlierMeet(meet1 repository.Meet, meet2 repository.Meet) repository.Mee
 	time2, _ := time.Parse("15:04", meet2.Start)
 
 	if nowTime.After(time1) && nowTime.After(time2) {
-		return repository.NewMeet()
+		return common.NewMeet()
 	} else if nowTime.After(time1) {
 		return meet2
 	} else if nowTime.After(time2) {
@@ -67,7 +68,7 @@ func getEarlierMeet(meet1 repository.Meet, meet2 repository.Meet) repository.Mee
 	}
 }
 
-func runMeet(meet repository.Meet) {
+func runMeet(meet common.Meet) {
 	fmt.Println(meet.Name, "の会議を開きます")
 	url := ""
 	if len(meet.Url) > 0 {
@@ -81,9 +82,9 @@ func runMeet(meet repository.Meet) {
 	}
 }
 
-func StartMeet(config repository.Config) {
-	var currentMeet repository.Meet
-	var nextMeet repository.Meet
+func StartMeet(config common.Config) {
+	var currentMeet common.Meet
+	var nextMeet common.Meet
 
 	now := time.Now()
 
@@ -134,7 +135,7 @@ func StartMeet(config repository.Config) {
 	}
 }
 
-func inputName(meets []repository.Meet) string {
+func inputName(meets []common.Meet) string {
 	var name string
 	flg := 0
 	for flg == 0 {
@@ -166,7 +167,7 @@ func inputWeekday() (string, string) {
 		tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
 		date = fmt.Sprintf("%02d-%02d", tmp/100, tmp%100)
 	case 1, 2, 3, 4, 5, 6, 7:
-		weekday = repository.WeekdayString[n-1]
+		weekday = common.WeekdayString[n-1]
 	default:
 		weekday, date = inputWeekday()
 	}
@@ -220,7 +221,7 @@ func adjustYear(dateStr string) time.Time {
 	return date
 }
 
-func makeSchtasks(meet repository.Meet) {
+func makeSchtasks(meet common.Meet) {
 	var id string
 	var pass string
 	if len(meet.Url) > 0 {
@@ -251,10 +252,10 @@ func makeSchtasks(meet repository.Meet) {
 	}
 }
 
-func MakeMeet(config *repository.Config, filename string) {
+func MakeMeet(config *common.Config, filename string) {
 	fmt.Println("新しく会議を登録します")
 	config.SumId++
-	meet := repository.NewMeet()
+	meet := common.NewMeet()
 
 	meet.Id = config.SumId
 	meet.Name = inputName(config.Meets)
@@ -277,7 +278,7 @@ func MakeMeet(config *repository.Config, filename string) {
 	}
 }
 
-func showMeet(meet repository.Meet) {
+func showMeet(meet common.Meet) {
 	fmt.Println(meet.Name)
 	if len(meet.Url) > 0 {
 		fmt.Println(" URL:", meet.Url)
@@ -294,7 +295,7 @@ func showMeet(meet repository.Meet) {
 	fmt.Println(" 時刻:", meet.Start, "-", meet.End)
 }
 
-func ShowMeets(config repository.Config) {
+func ShowMeets(config common.Config) {
 	fmt.Println("登録されている会議を表示します")
 	if len(config.Meets) == 0 {
 		fmt.Println("登録会議なし")
@@ -306,7 +307,7 @@ func ShowMeets(config repository.Config) {
 	}
 }
 
-func editMeet(config *repository.Config, filename string) {
+func editMeet(config *common.Config, filename string) {
 	fmt.Println("登録会議の編集をします")
 	ShowMeets(*config)
 	fmt.Println()
@@ -353,7 +354,7 @@ func deleteSchtasks(name string) {
 	}
 }
 
-func deleteMeet(config *repository.Config, filename string) {
+func deleteMeet(config *common.Config, filename string) {
 	fmt.Println("登録会議の削除をします")
 	ShowMeets(*config)
 	fmt.Println()
@@ -369,7 +370,7 @@ func deleteMeet(config *repository.Config, filename string) {
 			for _, meet := range config.Meets {
 				deleteSchtasks(meet.Name)
 			}
-			config.Meets = []repository.Meet{}
+			config.Meets = []common.Meet{}
 			repository.SaveConfig(config, filename)
 			fmt.Println("すべてのデータを削除しました")
 		default:
@@ -386,7 +387,7 @@ func deleteMeet(config *repository.Config, filename string) {
 			switch InputNum("1: はい, 2: いいえ") {
 			case 1:
 				fmt.Println(config.Meets[meetNum].Name, "のデータを削除します")
-				var tmpMeets []repository.Meet
+				var tmpMeets []common.Meet
 				for i, meet := range config.Meets {
 					if i == meetNum {
 						continue
@@ -405,7 +406,7 @@ func deleteMeet(config *repository.Config, filename string) {
 	}
 }
 
-func EditOrDeleteMeet(config *repository.Config, filename string) {
+func EditOrDeleteMeet(config *common.Config, filename string) {
 	fmt.Println("\n登録会議の編集・削除を行います")
 	if len(config.Meets) == 0 {
 		fmt.Println("登録会議なし")
@@ -421,7 +422,7 @@ func EditOrDeleteMeet(config *repository.Config, filename string) {
 	}
 }
 
-func StartSpecifiedMeet(config repository.Config) {
+func StartSpecifiedMeet(config common.Config) {
 	fmt.Println("指定された会議を開きます")
 	ShowMeets(config)
 	fmt.Println()
@@ -433,7 +434,7 @@ func StartSpecifiedMeet(config repository.Config) {
 	runMeet(config.Meets[meetNum])
 }
 
-func EditSetting(config *repository.Config, filename string) {
+func EditSetting(config *common.Config, filename string) {
 	fmt.Println("設定の変更をします")
 	switch InputNum("0: 戻る, 1: 会議開始前の余裕時間, 2: 該当会議がない場合の質問") {
 	case 0:
