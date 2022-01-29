@@ -243,6 +243,7 @@ func makeSchtasks(meet common.Meet) {
 	dateWithYear := fmt.Sprintf("%04d/%02d/%02d", year, month, date)
 
 	//fmt.Println("./settask.bat", meet.Name, id, pass, stimeStr, dateWithYear)
+	os.Chdir("./bat/")
 	_, err := exec.Command("settask.bat", meet.Name, id, pass, stimeStr, dateWithYear).Output()
 
 	if err != nil {
@@ -347,6 +348,7 @@ func editMeet(config *common.Config, filename string) {
 }
 
 func deleteSchtasks(name string) {
+	os.Chdir("./bat/")
 	_, err := exec.Command("deletetask.bat", name).Output()
 
 	if err == nil { // errは削除対象が存在しないときのエラーである前提の処理
