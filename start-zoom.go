@@ -221,7 +221,6 @@ func adjustYear(dateStr string) time.Time {
 }
 
 func makeSchtasks(meet repository.Meet) {
-
 	var id string
 	var pass string
 	if len(meet.Url) > 0 {
