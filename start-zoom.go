@@ -1,4 +1,4 @@
-package functions
+package start_zoom
 
 import (
 	"bufio"
@@ -21,7 +21,7 @@ func read() string {
 }
 
 // InputNum /*数値入力用関数*/
-func InputNum (msg string) int {
+func InputNum(msg string) int {
 	for {
 		fmt.Println(msg)
 		i, e := strconv.Atoi(read())
@@ -37,7 +37,7 @@ func checkTime(meet repository.Meet, timeMargin int) bool {
 
 	nowTime, _ := time.Parse("15:4", fmt.Sprintf("%d:%d", now.Hour(), now.Minute()))
 	startTime, _ := time.Parse("15:04", meet.Start)
-	startTime = startTime.Add(time.Duration(-1 * timeMargin) * time.Minute)
+	startTime = startTime.Add(time.Duration(-1*timeMargin) * time.Minute)
 	endTime, _ := time.Parse("15:04", meet.End)
 
 	if startTime.Before(nowTime) && endTime.After(nowTime) {
@@ -148,7 +148,9 @@ func inputName(meets []repository.Meet) string {
 				fmt.Println()
 				showMeet(meets[i])
 			}
-		} else { flg = 1 }
+		} else {
+			flg = 1
+		}
 		fmt.Println()
 	}
 	return name
@@ -157,14 +159,16 @@ func inputName(meets []repository.Meet) string {
 func inputWeekday() (string, string) {
 	fmt.Println("\nZoomが開催される曜日を指定。毎週開催されるものでなくある日程のみの会議の場合は、日付のみの指定も可能です")
 	n := InputNum("曜日(または日付指定)を選択: 0: 日付で指定する, 1: Sunday, 2: Monday, 3: Tuesday, 4: Wednesday, 5: Thursday, 6: Friday, 7: Saturday")
-	var weekday string; var date string
+	var weekday string
+	var date string
 	switch n {
 	case 0:
 		tmp := InputNum("日付を入力(例：1月2日 => 0102 (半角数字))")
-		date = fmt.Sprintf("%02d-%02d", tmp / 100, tmp % 100)
+		date = fmt.Sprintf("%02d-%02d", tmp/100, tmp%100)
 	case 1, 2, 3, 4, 5, 6, 7:
-		weekday = repository.WeekdayString[n - 1]
-	default: weekday, date = inputWeekday()
+		weekday = repository.WeekdayString[n-1]
+	default:
+		weekday, date = inputWeekday()
 	}
 	return weekday, date
 }
@@ -173,7 +177,7 @@ func inputStartTime() string {
 	fmt.Println()
 	tmp := InputNum("開始時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
 
-	startTime := fmt.Sprintf("%02d:%02d", tmp / 100, tmp % 100)
+	startTime := fmt.Sprintf("%02d:%02d", tmp/100, tmp%100)
 	return startTime
 }
 
@@ -181,13 +185,15 @@ func inputEndTime() string {
 	fmt.Println()
 	tmp := InputNum("終了時刻を入力(例：14:30 => 1430 (半角数字), 存在しない時刻は入力しないでください)")
 
-	endTime := fmt.Sprintf("%02d:%02d", tmp / 100, tmp % 100)
+	endTime := fmt.Sprintf("%02d:%02d", tmp/100, tmp%100)
 	return endTime
 }
 
 func inputUrlOrId() (string, string, string) {
 	fmt.Println("\n会議のURLまたはIDとパスワードを入力")
-	url := ""; id := ""; pass := ""
+	url := ""
+	id := ""
+	pass := ""
 	switch InputNum("1: URLで登録, 2: IDとパスワードで登録") {
 	case 1:
 		fmt.Println("URLを入力してください")
@@ -203,7 +209,7 @@ func inputUrlOrId() (string, string, string) {
 
 func adjustYear(dateStr string) time.Time {
 	now := time.Now()
-	date, err := time.Parse("2006-01-02", strconv.Itoa(now.Year()) + "-" + dateStr)
+	date, err := time.Parse("2006-01-02", strconv.Itoa(now.Year())+"-"+dateStr)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -216,7 +222,8 @@ func adjustYear(dateStr string) time.Time {
 
 func makeSchtasks(meet repository.Meet) {
 
-	var id string; var pass string
+	var id string
+	var pass string
 	if len(meet.Url) > 0 {
 		idIndex := strings.Index(meet.Url, "j/") + 2
 		qIndex := strings.Index(meet.Url, "?")
@@ -294,7 +301,7 @@ func ShowMeets(config repository.Config) {
 		fmt.Println("登録会議なし")
 	} else {
 		for i, meet := range config.Meets {
-			fmt.Print("\n", i + 1, ": ")
+			fmt.Print("\n", i+1, ": ")
 			showMeet(meet)
 		}
 	}
@@ -318,11 +325,16 @@ func editMeet(config *repository.Config, filename string) {
 		tmpMeet := config.Meets[meetNum]
 		switch InputNum(tmpMeet.Name + "の何を編集しますか？\n" +
 			"0: 戻る, 1: 名前, 2: 曜日または日付, 3: 開始時刻, 4: 終了時刻, 5: URLまたはZoomIDとパスワード") {
-		case 1: tmpMeet.Name = inputName(config.Meets)
-		case 2: tmpMeet.Weekday, tmpMeet.Date = inputWeekday()
-		case 3: tmpMeet.Start = inputStartTime()
-		case 4: tmpMeet.End = inputEndTime()
-		case 5: tmpMeet.Url, tmpMeet.ZoomId, tmpMeet.Pass = inputUrlOrId()
+		case 1:
+			tmpMeet.Name = inputName(config.Meets)
+		case 2:
+			tmpMeet.Weekday, tmpMeet.Date = inputWeekday()
+		case 3:
+			tmpMeet.Start = inputStartTime()
+		case 4:
+			tmpMeet.End = inputEndTime()
+		case 5:
+			tmpMeet.Url, tmpMeet.ZoomId, tmpMeet.Pass = inputUrlOrId()
 		default:
 			fmt.Println("戻ります")
 			return
@@ -377,7 +389,9 @@ func deleteMeet(config *repository.Config, filename string) {
 				fmt.Println(config.Meets[meetNum].Name, "のデータを削除します")
 				var tmpMeets []repository.Meet
 				for i, meet := range config.Meets {
-					if i == meetNum { continue }
+					if i == meetNum {
+						continue
+					}
 					tmpMeets = append(tmpMeets, meet)
 				}
 				deleteSchtasks(config.Meets[meetNum].Name)
@@ -399,9 +413,12 @@ func EditOrDeleteMeet(config *repository.Config, filename string) {
 		return
 	}
 	switch InputNum("0: 戻る, 1: 編集, 2: 削除") {
-	case 1: editMeet(config, filename)
-	case 2: deleteMeet(config, filename)
-	default: return
+	case 1:
+		editMeet(config, filename)
+	case 2:
+		deleteMeet(config, filename)
+	default:
+		return
 	}
 }
 
@@ -430,8 +447,10 @@ func EditSetting(config *repository.Config, filename string) {
 		fmt.Println("授業開始を選択した際に、開始時刻に該当する会議がなかったときに、同じ日のなかで" +
 			"最も開始時刻の近いものを開くかどうかの質問の有無を設定します")
 		switch InputNum("1: 聞く, 2: 聞かない") {
-		case 1: config.IsAsk = true
-		case 2: config.IsAsk = false
+		case 1:
+			config.IsAsk = true
+		case 2:
+			config.IsAsk = false
 		}
 	}
 	repository.SaveConfig(config, filename)
