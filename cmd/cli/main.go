@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-	filename := "config.json"
+	filename := "files/config.json"
 	config := repository.LoadConfig(filename)
 
 	if len(opts.Start) != 0 {
